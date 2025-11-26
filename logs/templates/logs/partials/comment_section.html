@@ -1,0 +1,35 @@
+<!-- Comment Section for Log Cards -->
+<!-- Comments Container (Hidden by default) -->
+<div id="comments-container-{{ log.sig }}" class="hidden mt-3">
+        
+        <!-- Comment Form -->
+        <div class="mb-4">
+            <form onsubmit="addComment(event, '{{ log.sig }}'); return false;" class="comment-form">
+                <textarea 
+                    id="comment-input-{{ log.sig }}"
+                    class="w-full bg-[#0d1117] border border-[#30363d] rounded-lg p-3 text-sm text-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+                    placeholder="Write a comment..."
+                    rows="3"
+                    maxlength="500"
+                    required></textarea>
+                <div class="flex justify-end gap-2 mt-2">
+                    <button type="submit" 
+                            class="px-4 py-2 bg-green-800 hover:bg-green-700 text-white text-sm rounded-md transition-colors">
+                        <i class="fa fa-paper-plane mr-1"></i>
+                        Comment
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Comments List -->
+        <div id="comments-list-{{ log.sig }}" class="space-y-3">
+            {% for comment in log.comments.all %}
+                {% if not comment.parent_comment %}
+                    {% include 'logs/partials/comment_item.html' with comment=comment log=log log_sig=log.sig %}
+                {% endif %}
+            {% empty %}
+                <p class="text-gray-500 text-sm text-center py-4">No comments yet!</p>
+            {% endfor %}
+        </div>
+    </div>

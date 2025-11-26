@@ -235,3 +235,206 @@ function toggleReaction(sig, emoji) {
 // Make functions globally available
 window.toggleReaction = toggleReaction;
 window.toggleReactionPicker = toggleReactionPicker;
+
+/**
+ * Toggle comments section visibility
+ */
+function toggleComments(sig) {
+  const container = $(`#comments-container-${sig}`);
+  container.toggleClass('hidden');
+}
+
+/**
+ * Add a comment or reply to a log
+ */
+function addComment(event, sig, parentId = null) {
+  event.preventDefault();
+
+  const inputId = parentId ? `reply-input-${parentId}` : `comment-input-${sig}`;
+  const textarea = $(`#${inputId}`);
+  const content = textarea.val().trim();
+
+  if (!content) return;
+
+  // Show loading state
+  const submitBtn = $(event.target).find('button[type="submit"]');
+  const originalText = submitBtn.html();
+  submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+  const formData = {
+    'content': content,
+    'csrfmiddlewaretoken': getCSRFToken()
+  };
+
+  if (parentId) {
+    formData['parent_id'] = parentId;
+  }
+
+  $.ajax({
+    type: "POST",
+    url: `/logs/comment/add/${sig}/`,
+    data: formData,
+    success: function (response) {
+      if (response.success) {
+        // Clear input
+        textarea.val('');
+
+        // Hide reply form if it's a reply
+        if (parentId) {
+          cancelReply(parentId);
+        }
+
+        // Append comment to DOM
+        appendComment(response, sig, parentId);
+
+        // Update comment count
+        updateCommentCount(sig, 1);
+      }
+    },
+    error: function (xhr) {
+      console.error('Error adding comment:', xhr.responseText);
+      alert('Failed to add comment. Please try again.');
+    },
+    complete: function () {
+      submitBtn.prop('disabled', false).html(originalText);
+    }
+  });
+}
+
+/**
+ * Delete a comment
+ */
+function deleteComment(commentId, sig) {
+  if (!confirm('Are you sure you want to delete this comment?')) return;
+
+  $.ajax({
+    type: "POST",
+    url: `/logs/comment/delete/${commentId}/`,
+    data: {
+      'csrfmiddlewaretoken': getCSRFToken()
+    },
+    success: function (response) {
+      if (response.success) {
+        // Remove comment from DOM
+        $(`#comment-${commentId}`).fadeOut(300, function () {
+          $(this).remove();
+        });
+
+        // Update comment count (use deleted_count to account for nested replies)
+        updateCommentCount(sig, -(response.deleted_count || 1));
+      }
+    },
+    error: function (xhr) {
+      if (xhr.status === 403) {
+        alert('You are not authorized to delete this comment.');
+      } else {
+        alert('Failed to delete comment. Please try again.');
+      }
+    }
+  });
+}
+
+/**
+ * Show reply form for a comment
+ */
+function showReplyForm(commentId, sig) {
+  // Hide all other reply forms
+  $('.hidden[id^="reply-form-"]').addClass('hidden');
+
+  // Show this reply form
+  $(`#reply-form-${commentId}`).removeClass('hidden');
+  $(`#reply-input-${commentId}`).focus();
+}
+
+/**
+ * Cancel reply and hide form
+ */
+function cancelReply(commentId) {
+  $(`#reply-form-${commentId}`).addClass('hidden');
+  $(`#reply-input-${commentId}`).val('');
+}
+
+/**
+ * Append a new comment to the DOM
+ */
+function appendComment(commentData, sig, parentId) {
+  const commentHtml = `
+    <div id="comment-${commentData.comment_id}" class="${parentId ? 'ml-8 border-l-2 border-[#21262d] pl-4' : ''}">
+      <div class="bg-[#0d1117] border border-[#21262d] rounded-lg p-3">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <img src="${commentData.user_image || '/static/assets/default-avatar.png'}" 
+                 alt="${commentData.user}"
+                 class="w-6 h-6 rounded-full">
+            <span class="text-sm font-medium text-gray-300">${commentData.user}</span>
+            <span class="text-xs text-gray-500">just now</span>
+          </div>
+          ${commentData.can_delete ? `
+          <button onclick="deleteComment(${commentData.comment_id}, '${sig}')" 
+                  class="text-gray-500 hover:text-red-400 transition-colors">
+            <i class="fa fa-trash text-xs"></i>
+          </button>
+          ` : ''}
+        </div>
+        <p class="text-sm text-gray-300 whitespace-pre-wrap">${commentData.content}</p>
+        <div class="flex items-center gap-4 mt-2">
+          <button onclick="showReplyForm(${commentData.comment_id}, '${sig}')" 
+                  class="text-xs text-gray-500 hover:text-green-400 transition-colors">
+            <i class="fa fa-reply mr-1"></i>Reply
+          </button>
+        </div>
+        <div id="reply-form-${commentData.comment_id}" class="hidden mt-3">
+          <form onsubmit="addComment(event, '${sig}', ${commentData.comment_id}); return false;">
+            <textarea 
+              id="reply-input-${commentData.comment_id}"
+              class="w-full bg-[#161b22] border border-[#30363d] rounded-lg p-2 text-sm text-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+              placeholder="Write a reply..."
+              rows="2"
+              maxlength="500"
+              required></textarea>
+            <div class="flex justify-end gap-2 mt-2">
+              <button type="button" 
+                      onclick="cancelReply(${commentData.comment_id})"
+                      class="px-3 py-1 text-xs text-gray-400 hover:text-gray-300 transition-colors">
+                Cancel
+              </button>
+              <button type="submit" 
+                      class="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-xs rounded-md transition-colors">
+                Reply
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div id="replies-${commentData.comment_id}" class="mt-3 space-y-3"></div>
+    </div>
+  `;
+
+  if (parentId) {
+    // Append to replies section
+    $(`#replies-${parentId}`).append(commentHtml);
+  } else {
+    // Append to main comments list
+    const commentsList = $(`#comments-list-${sig}`);
+    // Remove "no comments" message if it exists
+    commentsList.find('p.text-center').remove();
+    commentsList.append(commentHtml);
+  }
+}
+
+/**
+ * Update comment count display
+ */
+function updateCommentCount(sig, delta) {
+  const countElement = $(`#comment-count-${sig}`);
+  const currentCount = parseInt(countElement.text()) || 0;
+  const newCount = Math.max(0, currentCount + delta);
+  countElement.text(newCount);
+}
+
+// Export comment functions
+window.toggleComments = toggleComments;
+window.addComment = addComment;
+window.deleteComment = deleteComment;
+window.showReplyForm = showReplyForm;
+window.cancelReply = cancelReply;

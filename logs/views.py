@@ -3,10 +3,10 @@ from itertools import islice
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from .forms import LogForm
+from .forms import LogForm, CommentForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from .models import Log, Reaction
+from .models import Log, Reaction, Comment
 from .utils import get_24h_log_stats, streak_calculation, calculate_max_streak
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -180,3 +180,60 @@ def toggle_reaction(request, sig):
         'counts': counts,
         'user_reaction': user_reaction
     })
+
+@login_required
+@require_POST
+def add_comment(request, sig):
+    log = get_object_or_404(Log, sig=sig)
+    form = CommentForm(request.POST)
+    
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.mindlog = log
+        comment.user = request.user.info
+        
+        # Handle reply
+        parent_id = request.POST.get('parent_id')
+        if parent_id:
+            try:
+                parent_comment = Comment.objects.get(id=parent_id)
+                comment.parent_comment = parent_comment
+            except Comment.DoesNotExist:
+                pass
+                
+        comment.save()
+        
+        # Return JSON for AJAX
+        return JsonResponse({
+            'success': True,
+            'comment_id': comment.id,
+            'user': comment.user.user.username,
+            'user_image': comment.user.profile_image.url if comment.user.profile_image else None,
+            'content': comment.content,
+            'timestamp': comment.timestamp.strftime('%b %d, %Y, %I:%M %p'),
+            'parent_id': comment.parent_comment.id if comment.parent_comment else None,
+            'can_delete': True  # User just created it, so they can delete it
+        })
+    
+    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+@login_required
+@require_POST
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    
+    # Allow deletion by comment owner or log owner
+    if comment.user != request.user.info and comment.mindlog.user != request.user.info:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    # Count total comments to be deleted (parent + all nested replies)
+    def count_nested_comments(comment):
+        count = 1  # Count the comment itself
+        for reply in comment.replies.all():
+            count += count_nested_comments(reply)
+        return count
+    
+    total_deleted = count_nested_comments(comment)
+    
+    comment.delete()
+    return JsonResponse({'success': True, 'deleted_count': total_deleted})

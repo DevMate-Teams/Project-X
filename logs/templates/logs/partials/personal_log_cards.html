@@ -60,25 +60,27 @@
         {% endif %}
     </div>
 
-    <!-- Reactions -->
-    <div class="flex items-center gap-2 mt-3 pt-2 border-t border-[#21262d]/50 relative">
-        
-        <!-- Add Reaction Button -->
-        <button onclick="toggleReactionPicker('{{ log.sig }}')" 
-                class="add-reaction-btn text-gray-500 hover:text-blue-400 hover:cursor-pointer transition-colors p-1 rounded-md hover:bg-[#1f242c]">
-            <i class="fa fa-smile-o text-base"></i>
-        </button>
+    <!-- Reactions and Comments Row -->
+    <div class="flex items-center justify-between mt-3 pt-2 border-t border-[#21262d]/50 relative">
 
-        <!-- Reaction Picker (Absolute) -->
-        <div id="picker-{{ log.sig }}" class="reaction-picker hidden absolute bottom-full left-0 mb-2 bg-[#161b22] border border-[#30363d] rounded-lg shadow-xl p-2  gap-1 z-50">
-            <button onclick="toggleReaction('{{ log.sig }}', '❤️')" class="hover:bg-[#1f242c] p-1.5 rounded transition-colors text-sm">❤️</button>
-            <button onclick="toggleReaction('{{ log.sig }}', '🚀')" class="hover:bg-[#1f242c] p-1.5 rounded transition-colors text-sm">🚀</button>
-            <button onclick="toggleReaction('{{ log.sig }}', '💡')" class="hover:bg-[#1f242c] p-1.5 rounded transition-colors text-sm">💡</button>
-            <button onclick="toggleReaction('{{ log.sig }}', '😢')" class="hover:bg-[#1f242c] p-1.5 rounded transition-colors text-sm">😢</button>
-        </div>
+        <!-- Left Side: Reaction Picker + Active Reactions -->
+        <div class="flex items-center gap-2">
+            <!-- Add Reaction Button -->
+            <button onclick="toggleReactionPicker('{{ log.sig }}')" 
+                    class="add-reaction-btn text-gray-500 hover:text-blue-400 hover:cursor-pointer transition-colors p-1 rounded-md hover:bg-[#1f242c]">
+                <i class="fa fa-smile-o text-base"></i>
+            </button>
 
-        <!-- Active Reactions List -->
-        <div id="reactions-{{ log.sig }}" class="flex items-center gap-2">
+            <!-- Reaction Picker (Absolute) -->
+            <div id="picker-{{ log.sig }}" class="reaction-picker hidden absolute bottom-full left-0 mb-2 bg-[#161b22] border border-[#30363d] rounded-lg shadow-xl p-2  gap-1 z-50">
+                <button onclick="toggleReaction('{{ log.sig }}', '❤️')" class="hover:bg-[#1f242c] p-1.5 rounded transition-colors text-sm">❤️</button>
+                <button onclick="toggleReaction('{{ log.sig }}', '🚀')" class="hover:bg-[#1f242c] p-1.5 rounded transition-colors text-sm">🚀</button>
+                <button onclick="toggleReaction('{{ log.sig }}', '💡')" class="hover:bg-[#1f242c] p-1.5 rounded transition-colors text-sm">💡</button>
+                <button onclick="toggleReaction('{{ log.sig }}', '😢')" class="hover:bg-[#1f242c] p-1.5 rounded transition-colors text-sm">😢</button>
+            </div>
+
+            <!-- Active Reactions List -->
+            <div id="reactions-{{ log.sig }}" class="flex items-center gap-2">
             {% with user_reaction=log|args:request.user|call:"get_user_reaction" %}
                 
                 <!-- Like -->
@@ -146,8 +148,20 @@
                 </button>
 
             {% endwith %}
+            </div>
         </div>
+
+        <!-- Right Side: Comment Toggle Button -->
+        <button onclick="toggleComments('{{ log.sig }}')" 
+                class="flex items-center gap-2 text-gray-500 hover:text-green-400 transition-colors text-sm">
+            <i class="fa-regular fa-message text-base"></i>
+            <span id="comment-count-{{ log.sig }}">{{ log.total_comments }}</span>
+            <span class="hidden sm:inline">{{ log.total_comments|pluralize:"comment,comments" }}</span>
+        </button>
     </div>
+
+    <!-- Comments Section -->
+    {% include 'logs/partials/comment_section.html' with log=log %}
 
 </div>
 {% endfor %}

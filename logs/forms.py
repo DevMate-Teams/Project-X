@@ -1,5 +1,5 @@
 from django import forms
-from .models import Log
+from .models import Log, Comment
 
 class LogForm(forms.ModelForm):
     
@@ -21,5 +21,18 @@ class LogForm(forms.ModelForm):
                 'accept': 'image/*',
                 'onchange': 'handle_log_ImageUpload(event)',
                 'class': 'hidden',
+            }),
+        }
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'class': 'w-full bg-[#0d1117] border border-[#30363d] rounded-lg p-3 text-sm text-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none',
+                'placeholder': 'Write a comment...',
+                'rows': '3',
+                'maxlength': '500',
             }),
         }

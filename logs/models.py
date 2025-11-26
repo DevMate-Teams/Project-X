@@ -54,7 +54,7 @@ class Log(models.Model):
 
 class Comment(models.Model):
     """
-    Comment model for MindLog entries
+    Comment model for Log entries
     """
     mindlog = models.ForeignKey(Log, on_delete=models.CASCADE, related_name='comments')
     user = models.ForeignKey(userinfo, on_delete=models.CASCADE, related_name='mindlog_comments')
