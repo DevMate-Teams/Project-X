@@ -1,7 +1,7 @@
 from django.db import models
 from django.urls import reverse
 
-class CringeBadge(models.Model):
+class CodingStyle(models.Model):
     name = models.CharField(max_length=50, unique=True) 
     description = models.TextField()
     emoji = models.CharField(max_length=10)

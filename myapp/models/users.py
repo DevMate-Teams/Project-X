@@ -2,7 +2,7 @@ from django.db import models
 import uuid
 from django.contrib.auth.models import User
 from django.urls import reverse
-from .filter import skill, Domain, user_status, CringeBadge
+from .filter import skill, Domain, user_status, CodingStyle
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils import timezone
 
@@ -35,7 +35,7 @@ class userinfo(models.Model):
     skills = models.ManyToManyField(skill, related_name='users', blank=True)
     domains = models.ManyToManyField(Domain, verbose_name="domains", blank=True)
     years_of_experience = models.PositiveIntegerField(blank=True, null=True)
-    cringe_badge = models.ForeignKey(CringeBadge, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
+    coding_style = models.ForeignKey(CodingStyle, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     created_at = models.DateField(auto_now=False, auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)

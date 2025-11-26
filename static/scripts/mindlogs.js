@@ -409,7 +409,7 @@ function appendComment(commentData, sig, parentId) {
           
           ${commentData.can_delete ? `
           <button onclick="deleteComment(${commentData.comment_id}, '${sig}')" 
-                  class="text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover/parent:opacity-100 group-hover/reply:opacity-100 p-1">
+                  class="text-gray-500 hover:text-red-400 transition-colors opacity-100 md:opacity-0 md:group-hover/parent:opacity-100 md:group-hover/reply:opacity-100 p-1">
             <i class="fa fa-trash text-xs"></i>
           </button>
           ` : ''}

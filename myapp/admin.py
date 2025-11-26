@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import skill, userinfo, education, experience, follow, Domain, user_status, Notification, Industry, CringeBadge
+from .models import skill, userinfo, education, experience, follow, Domain, user_status, Notification, Industry, CodingStyle
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from logs.models import Log, Reaction
@@ -15,7 +15,7 @@ admin.site.register(user_status)
 admin.site.register(Reaction)
 admin.site.register(Notification)
 admin.site.register(Industry)
-admin.site.register(CringeBadge)
+admin.site.register(CodingStyle)
 
 @admin.register(userinfo)
 class userinfoAdmin(admin.ModelAdmin):

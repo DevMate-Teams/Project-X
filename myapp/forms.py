@@ -89,9 +89,9 @@ class RegistrationForm(UserCreationForm):
 class Postsignup_infoForm(forms.ModelForm):
     class Meta:
         model = userinfo
-        fields = ['status', 'cringe_badge', 'timezone']
+        fields = ['status', 'coding_style', 'timezone']
         widgets = {
-            'cringe_badge': forms.Select(attrs={
+            'coding_style': forms.Select(attrs={
                 'class': 'w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent'
             }),
             'status': forms.Select(attrs={
@@ -118,7 +118,7 @@ class EditProfileForm(forms.ModelForm):
     
     class Meta:
         model = userinfo
-        exclude = ['user', 'years_of_experience', 'skills', 'domains', 'profile_views', 'updated_at', 'needs_profile_completion', 'last_seen']
+        exclude = ['user', 'years_of_experience', 'skills', 'domains', 'profile_views', 'updated_at', 'needs_profile_completion', 'last_seen', 'timezone', 'coding_style']
         
         widgets = {
             'bio': forms.Textarea(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Bio...', 'rows': 7,'cols': 40,}),
@@ -133,24 +133,14 @@ class EditProfileForm(forms.ModelForm):
             'github': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Github URL'}),
             'stackoverflow': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Stackoverflow URL'}),
             'profile_image': forms.ClearableFileInput(attrs={'id': 'imgInput','class': 'hidden'}),
-            'cringe_badge': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2'}),
-            'timezone': forms.Select(attrs={
-                'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2',
-                'style': 'height: 40px; max-height: 40px;',
-                'size': '1'
-            }),
         }
         labels = {
             'bio': 'Short Bio',
             'contact_email': 'Contact Email (If any)',
-            'timezone': 'Timezone',
         }
         
     def __init__(self, *args, **kwargs):
         super(EditProfileForm, self).__init__(*args, **kwargs)
-        # Populate timezone choices
-        from myapp.timezone_utils import get_common_timezones
-        self.fields['timezone'].widget.choices = get_common_timezones()
         
         if self.instance and self.instance.user:
             user = self.instance.user

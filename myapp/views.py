@@ -13,7 +13,7 @@ from django.views import View
 from .forms import RegistrationForm, EditProfileForm, EditEducationForm, EditExperienceForm, EditSkillForm, Postsignup_infoForm
 from logs.forms import LogForm
 from django.contrib.auth.models import User
-from .models import userinfo, Domain, skill, user_status, education, experience, Notification, follow
+from .models import userinfo, Domain, skill, user_status, education, experience, Notification, CodingStyle
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, PageNotAnInteger
 from django.db.models import Q
@@ -556,3 +556,44 @@ def update_banner(request):
         return JsonResponse({'success': True, 'banner_url': request.user.info.banner_image})
     
     return JsonResponse({'success': False, 'error': 'Invalid banner selection'})
+
+@login_required
+@require_POST  
+def update_coding_style(request):
+    """Update user's coding style via AJAX"""
+    
+    style_id = request.POST.get('style_id')
+    
+    if not style_id:
+        return JsonResponse({'success': False, 'error': 'No style selected'})
+    
+    try:
+        coding_style = CodingStyle.objects.get(id=style_id)
+        request.user.info.coding_style = coding_style
+        request.user.info.save()
+        
+        return JsonResponse({
+            'success': True,
+            'style': {
+                'id': coding_style.id,
+                'name': coding_style.name,
+                'emoji': coding_style.emoji,
+                'description': coding_style.description
+            }
+        })
+    except CodingStyle.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Invalid coding style'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def get_coding_styles(request):
+    """Get all available coding styles for the modal"""
+    
+    styles = CodingStyle.objects.all().values('id', 'name', 'emoji', 'description')
+    current_style_id = request.user.info.coding_style.id if request.user.info.coding_style else None
+    
+    return JsonResponse({
+        'styles': list(styles),
+        'current_style_id': current_style_id
+    })

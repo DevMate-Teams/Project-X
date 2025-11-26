@@ -28,5 +28,7 @@ urlpatterns = [
     path("settings/", views.settings_page, name="settings_page"),
     path('delete-data/', views.delete_data, name = 'delete_data'),
     
-    path("delete_account/<uuid:uuid>/", views.delete_account, name="delete_acount")
+    path("delete_account/<uuid:uuid>/", views.delete_account, name="delete_acount"),
+    path('coding-style/update/', views.update_coding_style, name='update_coding_style'),
+    path('coding-style/get/', views.get_coding_styles, name='get_coding_styles'),
 ]
