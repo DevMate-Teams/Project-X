@@ -3,11 +3,11 @@
     
     <!-- Thread Line for Replies -->
     {% if comment.parent_comment %}
-    <div class="absolute -left-6 top-0 bottom-0 w-0.5 bg-[#30363d] rounded-full group-hover/reply:bg-[#58a6ff] transition-colors duration-300"></div>
-    <div class="absolute -left-6 top-4 w-4 h-0.5 bg-[#30363d] rounded-full group-hover/reply:bg-[#58a6ff] transition-colors duration-300"></div>
+    <div class="absolute -left-6 top-0 bottom-0 w-0.5 bg-[#30363d] rounded-full group-hover/reply:bg-green-700 transition-colors duration-300"></div>
+    <div class="absolute -left-6 top-4 w-4 h-0.5 bg-[#30363d] rounded-full group-hover/reply:bg-green-700 transition-colors duration-300"></div>
     {% endif %}
 
-    <div class="{% if comment.parent_comment %}bg-transparent pl-0{% else %}bg-[#161b22] border border-[#30363d] rounded-xl p-4 shadow-sm hover:border-[#58a6ff]/50 transition-colors{% endif %} relative">
+    <div class="{% if comment.parent_comment %}bg-transparent pl-0{% else %}bg-[#161b22] border border-[#30363d] rounded-xl p-4 shadow-sm transition-colors{% endif %} relative">
         <!-- Comment Header -->
         <div class="flex items-start justify-between mb-2">
             <div class="flex items-center gap-3">
@@ -15,7 +15,7 @@
                      alt="{{ comment.user.user.username }}"
                      class="{% if comment.parent_comment %}w-6 h-6 ring-1 ring-[#30363d]{% else %}w-9 h-9 ring-2 ring-[#30363d]{% endif %} rounded-full object-cover">
                 <div class="flex flex-col leading-tight">
-                    <span class="text-sm font-semibold text-gray-200 hover:text-blue-400 cursor-pointer transition-colors">{{ comment.user.user.username }}</span>
+                    <span class="text-sm font-semibold text-gray-200 hover:text-green-400 cursor-pointer transition-colors">{{ comment.user.user.username }}</span>
                     <span class="text-[11px] text-gray-500">{{ comment.timestamp|timesince }} ago</span>
                 </div>
             </div>
@@ -37,7 +37,7 @@
         <!-- Comment Actions -->
         <div class="flex items-center gap-4 mt-3 {% if comment.parent_comment %}pl-9{% endif %}">
             <button onclick="showReplyForm({{ comment.id }}, '{{ log_sig }}'{% if comment.parent_comment %}, '{{ comment.user.user.username }}'{% endif %})" 
-                    class="text-xs font-medium text-gray-500 hover:text-[#58a6ff] transition-colors flex items-center gap-1.5 py-1 px-2 -ml-2 rounded-md hover:bg-[#58a6ff]/10">
+                    class="text-xs font-medium text-gray-500 hover:text-green-400 transition-colors flex items-center gap-1.5 py-1 px-2 -ml-2 rounded-md hover:bg-[#58a6ff]/10">
                 <i class="fa fa-reply"></i>Reply
             </button>
         </div>

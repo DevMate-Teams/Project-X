@@ -2183,6 +2183,13 @@
       }
     }
   }
+  .group-hover\/reply\:bg-green-700 {
+    &:is(:where(.group\/reply):hover *) {
+      @media (hover: hover) {
+        background-color: var(--color-green-700);
+      }
+    }
+  }
   .group-hover\/reply\:opacity-100 {
     &:is(:where(.group\/reply):hover *) {
       @media (hover: hover) {

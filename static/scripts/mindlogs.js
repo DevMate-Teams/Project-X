@@ -365,36 +365,75 @@ function cancelReply(commentId) {
  * Append a new comment to the DOM
  */
 function appendComment(commentData, sig, parentId) {
+  // Determine styles based on whether it's a parent or reply
+  const isReply = !!parentId;
+
+  const containerClass = isReply
+    ? 'ml-12 mt-3 relative group/reply'
+    : 'mb-8 group/parent';
+
+  const cardClass = isReply
+    ? 'bg-transparent pl-0'
+    : 'bg-[#161b22] border border-[#30363d] rounded-xl p-4 shadow-sm transition-colors';
+
+  const avatarClass = isReply
+    ? 'w-6 h-6 ring-1 ring-[#30363d]'
+    : 'w-9 h-9 ring-2 ring-[#30363d]';
+
+  const threadLines = isReply
+    ? `<div class="absolute -left-6 top-0 bottom-0 w-0.5 bg-[#30363d] rounded-full group-hover/reply:bg-green-700 transition-colors duration-300"></div>
+       <div class="absolute -left-6 top-4 w-4 h-0.5 bg-[#30363d] rounded-full group-hover/reply:bg-green-700 transition-colors duration-300"></div>`
+    : '';
+
+  const contentPadding = isReply ? 'pl-9' : 'mt-2';
+  const actionsPadding = isReply ? 'pl-9' : '';
+  const formPadding = isReply ? 'pl-9' : '';
+
   const commentHtml = `
-    <div id="comment-${commentData.comment_id}" class="${parentId ? 'ml-8 border-l-2 border-[#21262d] pl-4' : ''}">
-      <div class="bg-[#0d1117] border border-[#21262d] rounded-lg p-3">
+    <div id="comment-${commentData.comment_id}" class="${containerClass}">
+      
+      ${threadLines}
+
+      <div class="${cardClass} relative">
+        <!-- Comment Header -->
         <div class="flex items-start justify-between mb-2">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
             <img src="${commentData.user_image || '/static/assets/default-avatar.png'}" 
                  alt="${commentData.user}"
-                 class="w-6 h-6 rounded-full">
-            <span class="text-sm font-medium text-gray-300">${commentData.user}</span>
-            <span class="text-xs text-gray-500">just now</span>
+                 class="${avatarClass} rounded-full object-cover">
+            <div class="flex flex-col leading-tight">
+              <span class="text-sm font-semibold text-gray-200 hover:text-green-400 cursor-pointer transition-colors">${commentData.user}</span>
+              <span class="text-[11px] text-gray-500">Just now</span>
+            </div>
           </div>
+          
           ${commentData.can_delete ? `
           <button onclick="deleteComment(${commentData.comment_id}, '${sig}')" 
-                  class="text-gray-500 hover:text-red-400 transition-colors">
+                  class="text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover/parent:opacity-100 group-hover/reply:opacity-100 p-1">
             <i class="fa fa-trash text-xs"></i>
           </button>
           ` : ''}
         </div>
-        <p class="text-sm text-gray-300 whitespace-pre-wrap">${commentData.content}</p>
-        <div class="flex items-center gap-4 mt-2">
-          <button onclick="showReplyForm(${commentData.comment_id}, '${sig}')" 
-                  class="text-xs text-gray-500 hover:text-green-400 transition-colors">
-            <i class="fa fa-reply mr-1"></i>Reply
+
+        <!-- Comment Content -->
+        <div class="${contentPadding}">
+          <p class="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">${commentData.content}</p>
+        </div>
+
+        <!-- Comment Actions -->
+        <div class="flex items-center gap-4 mt-3 ${actionsPadding}">
+          <button onclick="showReplyForm(${commentData.comment_id}, '${sig}'${isReply ? `, '${commentData.user}'` : ''})" 
+                  class="text-xs font-medium text-gray-500 hover:text-green-400 transition-colors flex items-center gap-1.5 py-1 px-2 -ml-2 rounded-md hover:bg-[#58a6ff]/10">
+            <i class="fa fa-reply"></i>Reply
           </button>
         </div>
-        <div id="reply-form-${commentData.comment_id}" class="hidden mt-3">
+
+        <!-- Reply Form (Hidden by default) -->
+        <div id="reply-form-${commentData.comment_id}" class="hidden mt-3 pt-3 border-t border-[#30363d]/30 ${formPadding}">
           <form onsubmit="addComment(event, '${sig}', ${commentData.comment_id}); return false;">
             <textarea 
               id="reply-input-${commentData.comment_id}"
-              class="w-full bg-[#161b22] border border-[#30363d] rounded-lg p-2 text-sm text-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+              class="w-full bg-[#0d1117] border border-[#30363d] rounded-lg p-3 text-sm text-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none placeholder-gray-600"
               placeholder="Write a reply..."
               rows="2"
               maxlength="500"
@@ -402,18 +441,18 @@ function appendComment(commentData, sig, parentId) {
             <div class="flex justify-end gap-2 mt-2">
               <button type="button" 
                       onclick="cancelReply(${commentData.comment_id})"
-                      class="px-3 py-1 text-xs text-gray-400 hover:text-gray-300 transition-colors">
+                      class="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-300 transition-colors">
                 Cancel
               </button>
               <button type="submit" 
-                      class="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-xs rounded-md transition-colors">
+                      class="px-3 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white text-xs font-medium rounded-md transition-colors shadow-sm border border-[rgba(240,246,252,0.1)]">
                 Reply
               </button>
             </div>
           </form>
         </div>
       </div>
-      <div id="replies-${commentData.comment_id}" class="mt-3 space-y-3"></div>
+      <div id="replies-${commentData.comment_id}" class="space-y-1"></div>
     </div>
   `;
 
@@ -424,7 +463,7 @@ function appendComment(commentData, sig, parentId) {
     // Append to main comments list
     const commentsList = $(`#comments-list-${sig}`);
     // Remove "no comments" message if it exists
-    commentsList.find('p.text-center').remove();
+    commentsList.find('div.text-center').remove();
     commentsList.append(commentHtml);
   }
 }
