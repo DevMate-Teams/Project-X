@@ -53,7 +53,11 @@
                                     <div class="flex flex-col gap-y-1 w-full">
                                         <a href='{% url "user_profile" dev.user.username %}' class="font-normal cursor-pointer text-lg hover:underline text-white hover:text-green-400 transition-colors">{{dev.user.first_name}} {{dev.user.last_name}}</a>
                                         <p class="text-gray-400">@{{dev.user.username}}</p>
-                                        {% if dev.coding_style %}<p class="break-words">{{dev.coding_style.emoji}} {{dev.coding_style.name}}</p>
+                                        {% if dev.coding_style %}
+                                        <div class="flex items-center gap-2">
+                                            <img src="{% static 'assets/coding-style-logo/' %}{{dev.coding_style.logo}}" alt="{{dev.coding_style.name}}" class="w-5 h-5">
+                                            <p class="break-words">{{dev.coding_style.name}}</p>
+                                        </div>
                                         {% else %}
                                         <p class="break-words text-gray-500">{{dev.status|default:""}}</p>
                                         {% endif %}

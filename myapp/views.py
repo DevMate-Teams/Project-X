@@ -586,7 +586,7 @@ def update_coding_style(request):
             'style': {
                 'id': coding_style.id,
                 'name': coding_style.name,
-                'emoji': coding_style.emoji,
+                'logo': coding_style.logo,
                 'description': coding_style.description
             }
         })
@@ -599,7 +599,7 @@ def update_coding_style(request):
 def get_coding_styles(request):
     """Get all available coding styles for the modal"""
     
-    styles = CodingStyle.objects.all().values('id', 'name', 'emoji', 'description')
+    styles = CodingStyle.objects.all().values('id', 'name', 'logo', 'description')
     current_style_id = request.user.info.coding_style.id if request.user.info.coding_style else None
     
     return JsonResponse({

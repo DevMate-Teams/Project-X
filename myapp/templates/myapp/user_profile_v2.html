@@ -141,9 +141,10 @@
 
                 <!-- Coding Style with Inline Edit -->
                 <div class="flex items-center gap-3 mt-1">
-                    {% if userinfo_obj.coding_style.emoji %}
-                    <div id="coding-style-badge" class="text-sm px-3 py-1 inline-block w-fit rounded-lg bg-[#262b34] text-white shadow-sm border border-[#333]">
-                        <span class="mr-2">{{userinfo_obj.coding_style.emoji}}</span>{{userinfo_obj.coding_style.name}}
+                    {% if userinfo_obj.coding_style.logo %}
+                    <div id="coding-style-badge" class="text-sm px-3 py-2 w-fit rounded-lg bg-[#262b34] text-white shadow-sm border border-[#333] flex items-center gap-2">
+                        <img src="{% static 'assets/coding-style-logo/' %}{{userinfo_obj.coding_style.logo}}" alt="{{userinfo_obj.coding_style.name}}" class="w-5 h-5">
+                        {{userinfo_obj.coding_style.name}}
                     </div>
                     {% else %}
                     <div id="coding-style-badge" class="text-sm px-3 py-1 inline-block w-fit rounded-lg bg-[#262b34]/50 text-gray-400 shadow-sm border border-dashed border-[#333]">
@@ -600,7 +601,7 @@
             <div class="w-full md:w-80 bg-[#161b22] border-t md:border-t-0 md:border-l border-[#30363d] p-6 flex flex-col shrink-0 z-10">
                 <div class="flex-1 flex flex-col items-center justify-center md:justify-start">
                     <div class="flex items-center justify-center w-24 h-24 mx-auto mb-4 rounded-full bg-[#0d1117] border border-[#30363d] shadow-sm">
-                        <span id="detail-emoji" class="text-5xl">☕</span>
+                        <img id="detail-logo" src="" alt="Style Logo" class="w-16 h-16 object-contain">
                     </div>
                     <h3 id="detail-name" class="text-xl font-bold text-[#c9d1d9] text-center mb-4">Coffee Coder</h3>
                     <div class="bg-[#0d1117] rounded-lg p-4 border border-[#30363d] w-full">

@@ -40,7 +40,9 @@ function renderCodingStyles() {
         <div onclick="showStyleDetails(${JSON.stringify(style).replace(/"/g, '&quot;')})" 
              class="relative cursor-pointer p-4 rounded-lg border border-[#30363d] hover:border-[#8b949e] transition-all duration-200 bg-[#161b22] hover:bg-[#1c2128] ${style.id === currentStyleId ? 'border-[#238636] ring-1 ring-[#238636]/50 bg-[#238636]/5' : ''}">
             ${style.id === currentStyleId ? '<div class="absolute top-2 right-2 px-2 py-0.5 bg-[#238636]/20 text-[#2ea043] border border-[#238636]/50 text-xs font-semibold rounded-full">Current</div>' : ''}
-            <div class="text-4xl mb-3">${style.emoji}</div>
+            <div class="flex items-center justify-center mb-3">
+                <img src="/static/assets/coding-style-logo/${style.logo}" alt="${style.name}" class="w-12 h-12 object-contain">
+            </div>
             <h3 class="text-sm font-semibold text-[#c9d1d9] mb-1">${style.name}</h3>
             <p class="text-xs text-[#8b949e] line-clamp-2">${style.description.split('\n')[0]}</p>
         </div>
@@ -49,7 +51,7 @@ function renderCodingStyles() {
 
 // Show style details in preview panel
 function showStyleDetails(style) {
-    document.getElementById('detail-emoji').textContent = style.emoji;
+    document.getElementById('detail-logo').src = `/static/assets/coding-style-logo/${style.logo}`;
     document.getElementById('detail-name').textContent = style.name;
     document.getElementById('detail-description').textContent = style.description;
     document.getElementById('select-style-btn').setAttribute('data-style-id', style.id);
@@ -94,8 +96,8 @@ async function selectCodingStyle() {
             const badge = document.getElementById('coding-style-badge');
             if (badge) {
                 // Update badge content and style
-                badge.className = "text-sm px-3 py-1 inline-block w-fit rounded-lg bg-[#262b34] text-white shadow-sm border border-[#333]";
-                badge.innerHTML = `<span class="mr-2">${data.style.emoji}</span>${data.style.name}`;
+                badge.className = "text-sm px-3 py-2 w-fit rounded-lg bg-[#262b34] text-white shadow-sm border border-[#333] flex items-center gap-2";
+                badge.innerHTML = `<img src="/static/assets/coding-style-logo/${data.style.logo}" alt="${data.style.name}" class="w-5 h-5">${data.style.name}`;
             }
 
             currentStyleId = data.style.id;

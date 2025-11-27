@@ -4,10 +4,10 @@ from django.urls import reverse
 class CodingStyle(models.Model):
     name = models.CharField(max_length=50, unique=True) 
     description = models.TextField()
-    emoji = models.CharField(max_length=10)
+    logo = models.CharField(max_length=255, default='', blank=True)
 
     def __str__(self):
-        return f"{self.emoji} {self.name}"
+        return f"{self.name}"
 
 class skill(models.Model): #Skills
     category_choices = [
