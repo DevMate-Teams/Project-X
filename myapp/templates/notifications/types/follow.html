@@ -10,10 +10,11 @@
     <span class="text-[#7d8590]">started following you</span>
     
     {% if notification.actor.coding_style %}
-    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#161b22] border border-[#30363d] rounded-full ml-1">
+    <div class="flex items-center gap-1.5 ml-1 opacity-80">
+        <span class="w-1 h-1 rounded-full bg-[#30363d]"></span>
         <img src="{% static 'assets/coding-style-logo/' %}{{ notification.actor.coding_style.logo }}" 
-             alt="" class="w-3.5 h-3.5 opacity-80">
-        <span class="text-xs text-[#7d8590] font-medium">{{ notification.actor.coding_style.name }}</span>
+             alt="" class="w-3.5 h-3.5 opacity-70 grayscale">
+        <span class="text-xs text-[#7d8590]">{{ notification.actor.coding_style.name }}</span>
     </div>
     {% endif %}
 </div>

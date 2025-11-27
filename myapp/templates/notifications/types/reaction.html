@@ -8,13 +8,13 @@
         </a>
         <span class="text-[#7d8590]">reacted</span>
         {% if notification.action_object %}
-        <span class="inline-flex items-center justify-center w-7 h-7 bg-[#161b22] border border-[#30363d] rounded-lg text-lg shadow-sm mx-1">{{ notification.action_object.emoji }}</span>
+        <span class="text-lg mx-0.5">{{ notification.action_object.emoji }}</span>
         {% endif %}
         <span class="text-[#7d8590]">to your log</span>
     </div>
 
     {% if notification.target %}
-    <div class="mt-1 text-sm text-[#7d8590] border-l-2 border-[#30363d] pl-3 py-1">
+    <div class="mt-1.5 text-sm text-[#8b949e] border-l-2 border-[#30363d] pl-3 py-0.5">
         {{ notification.target.content|truncatechars:100 }}
     </div>
     {% endif %}

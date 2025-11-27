@@ -1,7 +1,7 @@
 {% load static %}
 
-<div class="notification-item group flex items-start gap-3 px-3 lg:px-6 py-6 hover:bg-[#161b22] transition-all duration-200 cursor-pointer border-b border-[#21262d] last:border-0 border-l-[3px]
-     {% if not notification.is_read %}border-l-[#2ea043] bg-[#161b22]/20{% else %}border-l-transparent bg-transparent{% endif %}"
+<div class="notification-item group flex items-start gap-4 px-4 lg:px-6 py-5 hover:bg-[#161b22] transition-all duration-200 cursor-pointer border-b border-[#21262d] last:border-0 border-l-[3px]
+     {% if not notification.is_read %}border-l-[#2ea043] bg-[#161b22]/30{% else %}border-l-transparent bg-transparent{% endif %}"
      data-notification-id="{{ notification.id }}"
      onclick="handleNotificationClick({{ notification.id }}, '{% if notification.notification_type == 'follow' %}{% url 'user_profile' notification.actor.user.username %}{% elif notification.notification_type == 'comment' or notification.notification_type == 'reply' %}{% url 'user_profile' notification.target.user.user.username %}#{{ notification.target.sig }}{% elif notification.notification_type == 'reaction' %}{% url 'user_profile' notification.target.user.user.username %}#{{ notification.target.sig }}{% elif notification.notification_type == 'mention' or notification.notification_type == 'comment_mention' %}{% url 'user_profile' notification.target.user.user.username %}#{{ notification.target.sig }}{% endif %}')">
     
@@ -9,19 +9,19 @@
     <div class="relative flex-shrink-0">
         <a href="{% url 'user_profile' notification.actor.user.username %}" onclick="event.stopPropagation();">
             <img src="{{ notification.actor.profile_image.url }}?v={{ notification.actor.updated_at.timestamp }}" 
-                 class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#30363d] group-hover:border-[#2ea043] transition-colors duration-200" 
+                 class="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-[#30363d] group-hover:border-[#2ea043] transition-colors duration-200" 
                  alt="{{ notification.actor.user.username }}">
         </a>
         
         {# Type Badge #}
-        <div class="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center border-[3px] border-[#0d1117] group-hover:border-[#161b22] transition-colors duration-200
+        <div class="absolute -bottom-1 -right-1 w-5 h-5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border-[3px] border-[#0d1117] group-hover:border-[#161b22] transition-colors duration-200
             {% if notification.notification_type == 'follow' %}bg-[#1f6feb] text-white
             {% elif notification.notification_type == 'comment' %}bg-[#8957e5] text-white
             {% elif notification.notification_type == 'reply' %}bg-[#da3633] text-white
             {% elif notification.notification_type == 'reaction' %}bg-[#da3633] text-white
             {% elif notification.notification_type == 'mention' or notification.notification_type == 'comment_mention' %}bg-[#d29922] text-white
             {% endif %}">
-            <i class="text-[9px] sm:text-[10px]
+            <i class="text-[9px] sm:text-[9px]
                 {% if notification.notification_type == 'follow' %}fa-solid fa-user-plus
                 {% elif notification.notification_type == 'comment' %}fa-solid fa-comment
                 {% elif notification.notification_type == 'reply' %}fa-solid fa-reply
@@ -50,8 +50,7 @@
         </div>
         
         {# Timestamp - Clean and separated #}
-        <div class="mt-2 text-xs font-medium text-[#7d8590] flex items-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
-            <i class="fa-regular fa-clock text-[10px]"></i>
+        <div class="mt-1.5 text-xs font-medium text-[#7d8590] flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
             <span>{{ notification.timestamp|timesince }} ago</span>
         </div>
     </div>
