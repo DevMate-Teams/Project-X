@@ -134,9 +134,18 @@ def home_page(request):
     if request.user.info.needs_profile_completion:
         return redirect('signup_about', uuid=request.user.info.uuid)
     
+    # Get feed type from query params
+    feed_type = request.GET.get('feed', 'network')
+    
+    # Fetch personalized feed
+    from .algorithms import get_personalized_feed
+    feed_items = get_personalized_feed(request, type=feed_type, page=1, per_page=20)
+    
     logform = LogForm()
     context = {
         'logform': logform,
+        'feed_items': feed_items,
+        'feed_type': feed_type,
     }
 
     # User is authenticated and profile is complete

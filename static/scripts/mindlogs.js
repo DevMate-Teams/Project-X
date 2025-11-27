@@ -27,7 +27,8 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    const logCard = button.closest('.bg-\\[\\#12161d\\]'); // Find parent log card
+    // Find parent log card - look for the container with border-[#21262d]
+    const logCard = button.closest('.border-\\[\\#21262d\\]');
 
     if (!confirm("Are you sure you want to delete this log?")) return;
 

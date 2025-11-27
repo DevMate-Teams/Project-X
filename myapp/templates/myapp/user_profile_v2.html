@@ -19,7 +19,7 @@
 <script src="{% static 'scripts/coding-style-selector.js' %}"></script>
 {% endif %}
 {% endblock %} 
-{% block body_class %}text-[15px] h-full bg-[#0e1217] text-[#a8b3cf] overflow-x-hidden{% endblock %}
+{% block body_class %}text-[15px] h-full bg-[#010409] text-[#a8b3cf] overflow-x-hidden{% endblock %}
 
 {% block content %} 
 
@@ -213,7 +213,7 @@
             
             {% if section == "" or section == "overview" or section == none %}
                 <!-- Developer Bio / ReadMe Section -->
-                <section class="border border-[#2d323b] rounded-2xl p-6 shadow-lg">
+                <section class="border bg-[#11151b] border-[#2d323b] rounded-2xl p-6 shadow-lg">
                     <h2 class="text-2xl -mt-1 font-thin text-white flex items-center gap-2">
                         🧠 ReadMe
                         <span class="text-sm font-normal text-gray-400 hidden sm:inline">(Bio)</span>
@@ -430,11 +430,8 @@
 
             {% endif %}
 
-            {% comment %} post section {% endcomment %}
-
             {% comment %} info section {% endcomment %}
             {% include "myapp/user-info-section.html" %}
-
 
         </main>
 

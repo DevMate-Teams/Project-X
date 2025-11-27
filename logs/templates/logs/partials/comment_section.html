@@ -1,6 +1,6 @@
 <!-- Comment Section for Log Cards -->
 <!-- Comments Container (Hidden by default) -->
-<div id="comments-container-{{ log.sig }}" class="hidden mt-4 -mx-4 -mb-4 p-5 bg-[#000000] border-t border-[#30363d] rounded-b-lg">
+<div id="comments-container-{{ log.sig }}" class="hidden mt-4 -mx-4 -mb-4 {% if home_feed %}p-8{% else %}p-4{% endif %} bg-[#000000] border-t border-[#30363d] rounded-b-lg">
         
         <!-- Comment Form -->
         <div class="mb-6">
