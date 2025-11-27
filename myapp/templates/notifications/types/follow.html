@@ -1,17 +1,19 @@
-{# Follow notification #}
-<p class="text-[#e6edf3]">
+{% load static %}
+
+{# Follow notification - Spacious #}
+<div class="flex items-center flex-wrap gap-2">
     <a href="{% url 'user_profile' notification.actor.user.username %}" 
-       class="font-semibold text-[#e6edf3] hover:text-[#58a6ff] hover:underline"
+       class="font-semibold text-[#e6edf3] hover:text-[#58a6ff] hover:underline transition-colors"
        onclick="event.stopPropagation();">
         {{ notification.actor.user.username }}
     </a>
-    <span class="text-[#7d8590]"> started following you</span>
-</p>
-
-{% if notification.actor.coding_style %}
-<div class="flex items-center gap-1.5 mt-1.5">
-    <img src="{% static 'assets/coding-style-logo/' %}{{ notification.actor.coding_style.logo }}" 
-         alt="" class="w-3.5 h-3.5 opacity-70">
-    <span class="text-xs text-[#7d8590]">{{ notification.actor.coding_style.name }}</span>
+    <span class="text-[#7d8590]">started following you</span>
+    
+    {% if notification.actor.coding_style %}
+    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#161b22] border border-[#30363d] rounded-full ml-1">
+        <img src="{% static 'assets/coding-style-logo/' %}{{ notification.actor.coding_style.logo }}" 
+             alt="" class="w-3.5 h-3.5 opacity-80">
+        <span class="text-xs text-[#7d8590] font-medium">{{ notification.actor.coding_style.name }}</span>
+    </div>
+    {% endif %}
 </div>
-{% endif %}

@@ -1,15 +1,17 @@
-{# Comment notification #}
-<p class="text-[#e6edf3]">
-    <a href="{% url 'user_profile' notification.actor.user.username %}" 
-       class="font-semibold text-[#e6edf3] hover:text-[#58a6ff] hover:underline"
-       onclick="event.stopPropagation();">
-        {{ notification.actor.user.username }}
-    </a>
-    <span class="text-[#7d8590]"> commented on your log</span>
-</p>
+{# Comment notification - Spacious #}
+<div class="space-y-2">
+    <div class="flex items-center flex-wrap gap-1.5">
+        <a href="{% url 'user_profile' notification.actor.user.username %}" 
+           class="font-semibold text-[#e6edf3] hover:text-[#58a6ff] hover:underline transition-colors"
+           onclick="event.stopPropagation();">
+            {{ notification.actor.user.username }}
+        </a>
+        <span class="text-[#7d8590]">commented on your log</span>
+    </div>
 
-{% if notification.action_object %}
-<div class="mt-2 pl-3 border-l-2 border-[#30363d] text-xs text-[#7d8590] line-clamp-2">
-    {{ notification.action_object.content|truncatechars:120 }}
+    {% if notification.action_object %}
+    <div class="mt-1 text-[#a8b3cf] bg-[#161b22]/50 border-l-[3px] border-[#30363d] pl-4 py-2 rounded-r-lg italic">
+        "{{ notification.action_object.content|truncatechars:140 }}"
+    </div>
+    {% endif %}
 </div>
-{% endif %}

@@ -1,19 +1,21 @@
-{# Reaction notification #}
-<p class="text-[#e6edf3]">
-    <a href="{% url 'user_profile' notification.actor.user.username %}" 
-       class="font-semibold text-[#e6edf3] hover:text-[#58a6ff] hover:underline"
-       onclick="event.stopPropagation();">
-        {{ notification.actor.user.username }}
-    </a>
-    <span class="text-[#7d8590]"> reacted </span>
-    {% if notification.action_object %}
-    <span class="text-base">{{ notification.action_object.emoji }}</span>
-    {% endif %}
-    <span class="text-[#7d8590]"> to your log</span>
-</p>
+{# Reaction notification - Spacious #}
+<div class="space-y-2">
+    <div class="flex items-center flex-wrap gap-1.5">
+        <a href="{% url 'user_profile' notification.actor.user.username %}" 
+           class="font-semibold text-[#e6edf3] hover:text-[#58a6ff] hover:underline transition-colors"
+           onclick="event.stopPropagation();">
+            {{ notification.actor.user.username }}
+        </a>
+        <span class="text-[#7d8590]">reacted</span>
+        {% if notification.action_object %}
+        <span class="inline-flex items-center justify-center w-7 h-7 bg-[#161b22] border border-[#30363d] rounded-lg text-lg shadow-sm mx-1">{{ notification.action_object.emoji }}</span>
+        {% endif %}
+        <span class="text-[#7d8590]">to your log</span>
+    </div>
 
-{% if notification.target %}
-<div class="mt-2 pl-3 border-l-2 border-[#30363d] text-xs text-[#7d8590] line-clamp-1">
-    {{ notification.target.content|truncatechars:100 }}
+    {% if notification.target %}
+    <div class="mt-1 text-sm text-[#7d8590] border-l-2 border-[#30363d] pl-3 py-1">
+        {{ notification.target.content|truncatechars:100 }}
+    </div>
+    {% endif %}
 </div>
-{% endif %}
