@@ -1,7 +1,6 @@
 import threading
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import Notification
 from django.contrib.contenttypes.models import ContentType
 
 from allauth.account.models import EmailAddress
@@ -24,12 +23,3 @@ def send_notification_email(user, message, link=None):
     # threading.Thread(target=send_async).start()
     pass
     
-def notify_user(userinfo_receiver, userinfo_sender, obj, notif_type):
-    content_type = ContentType.objects.get_for_model(obj)
-    Notification.objects.create(
-        user=userinfo_receiver,
-        sender=userinfo_sender,
-        notification_type=notif_type,
-        content_type=content_type,
-        object_id=obj.id
-    )

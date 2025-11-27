@@ -13,8 +13,6 @@ urlpatterns = [
     path("skills/<uuid:uuid>", views.signup_skills, name="signup_skills"),
     path("", views.home_page, name="index"),
     path('load-more-feed/', views.load_more_feed, name='load_more_feed'),
-    path("notification/", views.notification_page, name="notification_page"),
-    path('notifications/count/', views.get_notification_count, name='get_notification_count'),
     
     path("explore-dev/", views.explore_dev, name="explore_dev"),
 
@@ -31,4 +29,10 @@ urlpatterns = [
     path("delete_account/<uuid:uuid>/", views.delete_account, name="delete_acount"),
     path('coding-style/update/', views.update_coding_style, name='update_coding_style'),
     path('coding-style/get/', views.get_coding_styles, name='get_coding_styles'),
+    
+    # Notifications
+    path('notifications/', views.notification_page, name='notification_page'),
+    path('notifications/mark-all-read/', views.mark_all_read, name='mark_all_read'),
+    path('notifications/count/', views.get_notification_count_api, name='get_notification_count'),
+    path('notifications/<int:notification_id>/mark-read/', views.mark_notification_read, name='mark_notification_read'),
 ]

@@ -1,0 +1,46 @@
+{% load static %}
+
+{# Generic notification item template - renders based on notification type #}
+<div class="notification-item flex items-start gap-4 p-4 rounded-lg border border-gray-700 hover:shadow-md transition-all duration-200 
+     {% if not notification.is_read %}bg-[#20252d] text-white unread{% endif %} 
+     cursor-pointer"
+     data-notification-id="{{ notification.id }}"
+     onclick="handleNotificationClick({{ notification.id }}, '{% if notification.notification_type == 'follow' %}{% url 'user_profile' notification.actor.user.username %}{% elif notification.notification_type == 'comment' or notification.notification_type == 'reply' %}{% url 'user_profile' notification.target.user.user.username %}#{{ notification.target.sig }}{% elif notification.notification_type == 'reaction' %}{% url 'user_profile' notification.target.user.user.username %}#{{ notification.target.sig }}{% elif notification.notification_type == 'mention' or notification.notification_type == 'comment_mention' %}{% url 'user_profile' notification.target.user.user.username %}#{{ notification.target.sig }}{% endif %}')">
+    
+    {# Actor Avatar #}
+    <a href="{% url 'user_profile' notification.actor.user.username %}" onclick="event.stopPropagation();">
+        <img src="{{ notification.actor.profile_image.url }}?v={{ notification.actor.updated_at.timestamp }}" 
+             class="w-10 h-10 md:w-12 md:h-12 rounded-lg object-cover ring-2 ring-gray-700 hover:ring-green-500 transition-all" 
+             alt="{{ notification.actor.user.username }}">
+    </a>
+    
+    {# Notification Content - Type Specific #}
+    <div class="flex-1 min-w-0">
+        {% if notification.notification_type == 'follow' %}
+            {% include 'notifications/types/follow.html' %}
+        {% elif notification.notification_type == 'comment' %}
+            {% include 'notifications/types/comment.html' %}
+        {% elif notification.notification_type == 'reply' %}
+            {% include 'notifications/types/reply.html' %}
+        {% elif notification.notification_type == 'reaction' %}
+            {% include 'notifications/types/reaction.html' %}
+        {% elif notification.notification_type == 'mention' %}
+            {% include 'notifications/types/mention.html' %}
+        {% elif notification.notification_type == 'comment_mention' %}
+            {% include 'notifications/types/comment_mention.html' %}
+        {% endif %}
+        
+        {# Timestamp #}
+        <p class="text-xs mt-2 text-gray-500">
+            <i class="fa fa-clock-o mr-1"></i>
+            {{ notification.timestamp|timesince }} ago
+        </p>
+    </div>
+    
+    {# Unread Indicator #}
+    {% if not notification.is_read %}
+    <div class="flex-shrink-0">
+        <span class="w-2 h-2 bg-green-500 rounded-full block"></span>
+    </div>
+    {% endif %}
+</div>

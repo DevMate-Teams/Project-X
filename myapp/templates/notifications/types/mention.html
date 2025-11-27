@@ -1,0 +1,20 @@
+{# Mention notification template #}
+<div>
+    <p class="text-sm text-gray-200 mb-2">
+        <a href="{% url 'user_profile' notification.actor.user.username %}" 
+           class="font-semibold text-green-400 hover:text-green-300 transition-colors"
+           onclick="event.stopPropagation();">
+            {{ notification.actor.user.username }}
+        </a>
+        <span class="text-gray-400">mentioned you in a log</span>
+    </p>
+    
+    {# Log preview with mention highlighted #}
+    {% if notification.target %}
+    <div class="bg-[#161b22] border border-gray-700 rounded-md p-2 mt-2">
+        <p class="text-xs text-gray-300 line-clamp-2">
+            <span class="text-green-400">></span> {{ notification.target.content|truncatechars:100 }}
+        </p>
+    </div>
+    {% endif %}
+</div>

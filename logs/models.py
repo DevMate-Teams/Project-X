@@ -2,6 +2,8 @@ from django.db import models
 from myapp.models import userinfo
 from django.utils.crypto import get_random_string
 from django.db.models import F, Count
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 BASE62_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -116,5 +118,62 @@ class Reaction(models.Model):
     
     def __str__(self):
         return f"{self.user.user.username} reacted {self.emoji} to {self.mindlog.sig}"
-    
 
+
+class Notification(models.Model):
+    """
+    Generic notification system using ContentTypes framework.
+    Can handle notifications for any model (Log, Comment, etc.)
+    """
+    
+    NOTIFICATION_TYPES = [
+        ('follow', 'New Follower'),
+        ('comment', 'New Comment'),
+        ('reply', 'Comment Reply'),
+        ('reaction', 'Reaction'),
+        ('mention', 'Mentioned in Log'),
+        ('comment_mention', 'Mentioned in Comment'),
+    ]
+    
+    # Who receives the notification
+    recipient = models.ForeignKey(userinfo, on_delete=models.CASCADE, related_name='notifications')
+    
+    # Who triggered the notification
+    actor = models.ForeignKey(userinfo, on_delete=models.CASCADE, related_name='triggered_notifications')
+    
+    # What action was performed
+    verb = models.CharField(max_length=100)  # e.g., "commented on", "reacted to", "followed"
+    
+    # Generic relation to target object (the thing being acted upon)
+    target_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='notification_targets')
+    target_object_id = models.PositiveIntegerField()
+    target = GenericForeignKey('target_content_type', 'target_object_id')
+    
+    # Optional: Action object (e.g., the comment itself, the reaction)
+    action_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='notification_actions', null=True, blank=True)
+    action_object_id = models.PositiveIntegerField(null=True, blank=True)
+    action_object = GenericForeignKey('action_content_type', 'action_object_id')
+    
+    # Notification type for easy filtering and rendering
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES, db_index=True)
+    
+    # Metadata
+    is_read = models.BooleanField(default=False, db_index=True)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['recipient', 'is_read', '-timestamp']),
+            models.Index(fields=['recipient', 'notification_type']),
+            models.Index(fields=['recipient', '-timestamp']),
+        ]
+    
+    def __str__(self):
+        return f"{self.actor.user.username} {self.verb} → {self.recipient.user.username}"
+    
+    def mark_as_read(self):
+        """Mark this notification as read"""
+        if not self.is_read:
+            self.is_read = True
+            self.save(update_fields=['is_read'])

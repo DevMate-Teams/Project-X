@@ -7,7 +7,7 @@ from .forms import LogForm, CommentForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from .models import Log, Reaction, Comment
-from .utils import get_24h_log_stats, streak_calculation, calculate_max_streak
+from .utils.streaks import get_24h_log_stats, streak_calculation, calculate_max_streak
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.paginator import Paginator

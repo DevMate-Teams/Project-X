@@ -1,5 +1,5 @@
 from django.views.decorators.http import require_POST
-import base64, time
+import base64
 from django.core.files.base import ContentFile
 from django.utils import timezone
 from django.utils.timezone import now, localtime
@@ -13,7 +13,7 @@ from django.views import View
 from .forms import RegistrationForm, EditProfileForm, EditEducationForm, EditExperienceForm, EditSkillForm, Postsignup_infoForm
 from logs.forms import LogForm
 from django.contrib.auth.models import User
-from .models import userinfo, Domain, skill, user_status, education, experience, Notification, CodingStyle
+from .models import userinfo, user_status, education, experience, CodingStyle
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, PageNotAnInteger
 from django.db.models import Q
@@ -22,15 +22,13 @@ from itertools import groupby
 from .algorithms import get_explore_users, get_personalized_feed, top_skills_list
 from allauth.account.views import PasswordChangeView
 from django.contrib import messages
-from .utils import send_notification_email, verified_user_ids
+from .utils import verified_user_ids
 from datetime import date, timedelta
-from collections import Counter, defaultdict
 
 #Logs
-from logs.utils import get_24h_log_stats, streak_calculation
 from logs.models import Log
 from logs.views import build_contribution_months
-from logs.utils import streak_calculation, calculate_max_streak
+from logs.utils.streaks import streak_calculation, calculate_max_streak
 
 # Create your views here.
 class CustomPasswordChangeView(PasswordChangeView):
@@ -169,48 +167,6 @@ def load_more_feed(request):
         'html': html,
         'has_next': feed_page.has_next()
     })
-
-@login_required
-def notification_page(request):
-    base_notifications = Notification.objects.filter(user=request.user.info).order_by('-created_at')
-    unread_count = base_notifications.filter(is_read=False).count()
-    notifications = base_notifications[:70]
-    # Group notifications by time
-    today = localtime(now()).date()
-    yesterday = today - timedelta(days=1)
-    week_ago = today - timedelta(days=7)
-
-    grouped_notifications = {
-        "Today": [],
-        "Yesterday": [],
-        "This Week": [],
-        "Older": []
-    }
-
-    for notification in notifications:
-        notification_date = localtime(notification.created_at).date()
-
-        if notification_date == today:
-            grouped_notifications["Today"].append(notification)
-        elif notification_date == yesterday:
-            grouped_notifications["Yesterday"].append(notification)
-        elif notification_date >= week_ago:
-            grouped_notifications["This Week"].append(notification)
-        else:
-            grouped_notifications["Older"].append(notification)
-                  
-    # Mark unread notifications as read after viewing 
-    Notification.objects.filter(user=request.user.info, is_read=False).update(is_read=True)
-    context = {
-        "grouped_notifications": grouped_notifications,
-        'notification_count': unread_count
-    }
-    return render(request, 'myapp/notification.html', context)
-
-@login_required
-def get_notification_count(request):
-    unread_count = Notification.objects.filter(user=request.user.info, is_read=False).count()
-    return JsonResponse({"unread_count": unread_count})
 
 #profile-page
 @login_required
@@ -392,9 +348,6 @@ def unfollow_user(request, otheruserinfo_id):
     user = request.user.info
     if user != otheruser:
         user.unfollow(otheruser)
-        Notify_obj = Notification.objects.filter(user=otheruser, sender=user, notification_type="follow")
-        if Notify_obj:  
-            Notify_obj.delete()
         return JsonResponse({"status": "unfollowed", "message": "User unfollowed Successfully.", 'followers_count': otheruser.get_followers().count(), 'following_count': otheruser.get_following().count()})
     return JsonResponse({"status":"error", "message": "Invalid request."}, status = 400)
 
@@ -404,8 +357,6 @@ def follow_user(request, otheruserinfo_id):
     user = request.user.info
     if user != otheruser:
         user.follow(otheruser)
-        notify = Notification.objects.create(user=otheruser, sender=user, notification_type="follow")
-        send_notification_email(otheruser, f'🧑‍💻 {user.user.username} {notify.get_notification_type_display()}!')
         return JsonResponse({"status": "followed", "message": "User followed successfully.", 'followers_count': otheruser.get_followers().count(), 'following_count': otheruser.get_following().count()})
     return JsonResponse({"status": "error", "message": "Invalid request."}, status=400)
     
@@ -606,3 +557,84 @@ def get_coding_styles(request):
         'styles': list(styles),
         'current_style_id': current_style_id
     })
+
+# ============= NOTIFICATION VIEWS =============
+
+@login_required
+def notification_page(request):
+    """
+    Display notifications page with grouped notifications
+    """
+    from logs.utils.notifications import get_user_notifications, get_notification_count, group_notifications_by_date
+    
+    # Get all notifications for the user
+    notifications = get_user_notifications(request.user, limit=50)
+    
+    # Group by date
+    grouped_notifications = group_notifications_by_date(notifications)
+    
+    # Get unread count
+    notification_count = get_notification_count(request.user, unread_only=True)
+    
+    context = {
+        'grouped_notifications': grouped_notifications,
+        'notification_count': notification_count,
+        'active_notifications': True,
+    }
+    
+    return render(request, 'myapp/notification.html', context)
+
+
+@login_required
+@require_POST
+def mark_all_read(request):
+    """
+    AJAX endpoint to mark all notifications as read
+    """
+    from logs.utils.notifications import mark_all_as_read
+    
+    count = mark_all_as_read(request.user)
+    
+    return JsonResponse({
+        'success': True,
+        'marked_count': count
+    })
+
+
+@login_required
+def get_notification_count_api(request):
+    """
+    AJAX endpoint to get real-time notification count for badge
+    """
+    from logs.utils.notifications import get_notification_count
+    
+    count = get_notification_count(request.user, unread_only=True)
+    
+    return JsonResponse({
+        'count': count
+    })
+
+
+@login_required
+@require_POST
+def mark_notification_read(request, notification_id):
+    """
+    Mark a single notification as read
+    """
+    from logs.models import Notification
+    
+    try:
+        notification = Notification.objects.get(
+            id=notification_id,
+            recipient=request.user.info
+        )
+        notification.mark_as_read()
+        
+        return JsonResponse({
+            'success': True
+        })
+    except Notification.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Notification not found'
+        }, status=404)

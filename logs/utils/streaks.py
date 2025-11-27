@@ -1,7 +1,7 @@
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Avg
-from .models import Log
+from logs.models import Log
 import math
 
 def get_24h_log_stats():
