@@ -28,13 +28,6 @@ class skill(models.Model): #Skills
 
     def __str__(self):
         return self.name
-
-class Domain(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True, null=True)
-    
-    def __str__(self):
-        return self.name
     
 class user_status(models.Model):
     name = models.CharField(max_length=50)
@@ -46,8 +39,3 @@ class user_status(models.Model):
     def __str__(self):
         return self.name
     
-class Industry(models.Model): #Filter of industry in Organization
-    name = models.CharField(max_length=255)
-    
-    def __str__(self):
-        return self.name

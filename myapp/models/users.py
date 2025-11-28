@@ -2,7 +2,7 @@ from django.db import models
 import uuid
 from django.contrib.auth.models import User
 from django.urls import reverse
-from .filter import skill, Domain, user_status, CodingStyle
+from .filter import skill, user_status, CodingStyle
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils import timezone
 
@@ -22,6 +22,9 @@ class userinfo(models.Model):
     profile_image = models.ImageField(upload_to='user_profile_img', height_field=None, default='user_profile_img/profile.jpg')
     banner_image = models.CharField(max_length=255, default='banners/default.jpg', blank=True, null=True)
     location = models.CharField(max_length=50, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
     website = models.URLField(blank=True, null=True)
     phone = PhoneNumberField(blank=True, null=True)
     gender = models.CharField(max_length=25, null=True, blank=True, choices=GENDER_CHOICES)
@@ -33,7 +36,6 @@ class userinfo(models.Model):
     stackoverflow = models.URLField(blank=True, null=True) 
     
     skills = models.ManyToManyField(skill, related_name='users', blank=True)
-    domains = models.ManyToManyField(Domain, verbose_name="domains", blank=True)
     years_of_experience = models.PositiveIntegerField(blank=True, null=True)
     coding_style = models.ForeignKey(CodingStyle, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     created_at = models.DateField(auto_now=False, auto_now_add=True, null=True)

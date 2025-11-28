@@ -4,7 +4,7 @@
 
 {% block title %}DevMate{% endblock %} 
 {% block style %}<link rel="stylesheet" href="{% static 'styles/user_profile_page.css' %}"/>{% endblock %} 
-{% block body_class %}text-[15px] h-full bg-[#0e1217] text-[#a8b3cf] overflow-x-hidden{% endblock %}
+{% block body_class %}text-[15px] h-full bg-[#010409] text-[#a8b3cf] overflow-x-hidden{% endblock %}
 
 {% block content %}    
 
@@ -12,185 +12,11 @@
     <div id='entireSection' class="flex flex-col lg:flex-row w-full gap-x-5 lg:gap-x-2">
         <!-- sidenav -->
         {% include "includes/sidenav.html" %}
-
-        <!-- explore section -->
-        <div class="flex flex-[5] flex-col flex-wrap mt-6 md:mt-6 gap-y-0 md:gap-y-5 lg:px-4 px-2">
-
-            <div class="flex flex-col gap-y-5 mt-1 w-full">
-                <!-- top section, search bar and filter option -->
-                <div class="w-full flex flex-row items-center justify-evenly  md:flex-row gap-x-5 gap-y-5 max-[450px]:flex-col mt-10 md:mt-0">
-                    <div class="text-gray-400 text-xs font-medium">({{total_result}} Results)</div>
-                    <div class="flex items-center gap-x-4 w-fit justify-center max-[450px]:w-full">
-                        <form method="GET" action="{% url 'explore_dev' %}" class="flex gap-x-3 items-center">
-                            <input type="text"  name="q" value="{{ query }}" class="w-70 outline-none border border-[#2d323b] rounded-full bg-[#161b22] text-[16px] px-4 py-2 text-white placeholder:text-xs placeholder:text-gray-400 focus:border-green-500 transition-colors" placeholder="Search...">
-                                <button type="submit" class="p-2 bg-gradient-to-br from-green-600 to-green-900 rounded-full hover:scale-105 transition-transform"><img src="{% static 'assets/search.svg' %}" alt="" class="w-5 h-5 filter invert"></button>
-                        </form>
-                        <div class="lg:hidden flex" onclick="openFilter()">
-                            <button class="flex items-center gap-x-2 text-gray-400 hover:text-white transition-colors"><i class="fa-solid fa-filter text-lg"></i> <span class="hidden md:block">Filter</span></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- People area fill all the people inside this div -->
-                <div class="relative flex  md:w-full px-2 pb-10">
-                    <div class="flex flex-col items- gap-y-10 w-full">
-                        <div class="flex flex-col gap-y-3">
-
-                            <!-- single user -->
-                            {% for dev in filter_user %}
-                            <div class="flex gap-x-2 bg-[#1a1f2b] border border-[#2d323b] px-5 py-5 items-start justify-between gap-y-2 max-[450px]:flex-col rounded-xl shadow-lg hover:shadow-xl hover:border-green-600/30 transition-all duration-300">
-                                <div class="flex gap-x-4 lg:gap-x-5 w-full">
-                                    {% comment %} <a href='{% url "user_profile" dev.user.username %}' class="h-14 w-14"><img src="{{dev.profile_image.url}}?v={{dev.updated_at.timestamp}}" alt="" class="rounded-lg"></a> {% endcomment %}
-                                    <div class="relative inline-block">
-                                        <a href='{% url "user_profile" dev.user.username %}'>
-                                            <img src="{{ dev.profile_image.url }}?v={{ dev.updated_at.timestamp }}" alt="" class="rounded-lg w-16 h-14 object-cover">
-                                        
-                                        {% if dev.last_seen|is_online %}
-                                            <span class="absolute bottom-5 right-0 block w-3 h-3 bg-green-500 border-2 border-white rounded-full" title='Active'></span>
-                                        {% endif %}
-                                        </a>
-                                    </div>
-                                    <div class="flex flex-col gap-y-1 w-full">
-                                        <a href='{% url "user_profile" dev.user.username %}' class="font-normal cursor-pointer text-lg hover:underline text-white hover:text-green-400 transition-colors">{{dev.user.first_name}} {{dev.user.last_name}}</a>
-                                        <p class="text-gray-400">@{{dev.user.username}}</p>
-                                        {% if dev.coding_style %}
-                                        <div class="flex items-center gap-2">
-                                            <img src="{% static 'assets/coding-style-logo/' %}{{dev.coding_style.logo}}" alt="{{dev.coding_style.name}}" class="w-5 h-5">
-                                            <p class="break-words">{{dev.coding_style.name}}</p>
-                                        </div>
-                                        {% else %}
-                                        <p class="break-words text-gray-500">{{dev.status|default:""}}</p>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                {% if user.info|is_following:dev %}
-                                    <a href="javascript:void(0);" class="follow-btn font-mono bg-[#262b34] text-white self-center px-2 py-2 w-[110px] text-center rounded-md max-[450px]:m-auto hover:scale-110 transition" data-user-id="{{ dev.id }}">
-                                        <span class="btn-text">&lt;Unfollow/&gt;</span>
-                                    </a>
-                                {% else %}
-                                    <a href="javascript:void(0);" class="follow-btn font-mono bg-[#6feb85] text-black self-center px-2 py-2 w-[120px] text-center rounded-md max-[450px]:m-auto hover:scale-110 transition" data-user-id="{{ dev.id }}">
-                                        <span class="btn-text">&lt;Follow/&gt;</span>
-                                    </a>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                            <!-- end of single user -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {% comment %} Pagination Links {% endcomment %}
-            <div>
-                {% if total_result %}
-                <div class="flex justify-center mb-20 lg:mb-12">
-                    <div class="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm">
-                        {% if filter_user.has_previous %}
-                            <a href="?page=1&skill={{request.GET.skill}}&status={{request.GET.status}}" class="px-2 py-1 md:px-3 md:py-2 border border-[#2d323b] text-gray-300 rounded-lg bg-[#1a1f2b] hover:bg-gradient-to-br hover:from-green-600 hover:to-green-900 hover:text-white transition duration-200 text-xs md:text-sm">&laquo; First</a>
-                            <a href="?page={{filter_user.previous_page_number}}&skill={{request.GET.skill}}&status={{request.GET.status}}" class="px-2 py-1 md:px-3 md:py-2 border border-[#2d323b] text-gray-300 rounded-lg bg-[#1a1f2b] hover:bg-gradient-to-br hover:from-green-600 hover:to-green-900 hover:text-white transition duration-200 text-xs md:text-sm">Previous</a>
-                        {% endif %}
-                
-                        <span class="text-white font-medium px-2 py-1 md:px-3 md:py-2 bg-[#262b34] rounded-lg border border-[#2d323b] text-xs md:text-sm">
-                            Page <span class="font-semibold text-green-400">{{ filter_user.number }}</span> of {{ filter_user.paginator.num_pages }}
-                        </span>
-                
-                        {% if filter_user.has_next %}
-                            <a href="?page={{filter_user.next_page_number}}&skill={{request.GET.skill}}&status={{request.GET.status}}" class="px-2 py-1 md:px-3 md:py-2 border border-[#2d323b] text-gray-300 rounded-lg bg-[#1a1f2b] hover:bg-gradient-to-br hover:from-green-600 hover:to-green-900 hover:text-white transition duration-200 text-xs md:text-sm">Next</a>
-                            <a href="?page={{filter_user.paginator.num_pages}}&skill={{request.GET.skill}}&status={{request.GET.status}}" class="px-2 py-1 md:px-3 md:py-2 border border-[#2d323b] text-gray-300 rounded-lg bg-[#1a1f2b] hover:bg-gradient-to-br hover:from-green-600 hover:to-green-900 hover:text-white transition duration-200 text-xs md:text-sm">Last &raquo;</a>
-                        {% endif %}
-                    </div>
-                </div>
-                {% else %}
-                <div class="flex flex-col items-center justify-center p-6 rounded-xl">
-                    <span class="text-lg font-medium text-gray-500 font-mono mb-4">
-                        Oops! No results Found!
-                    </span>
-                    <img src="{% static 'assets/not-found.png' %}" alt="Not Found" class="w-full rounded-2xl max-w-sm">
-                </div>
-                {% endif %}
-            </div>
-
-        </div>
-
-        {% comment %} Filter section {% endcomment %}
-        <div class="absolute lg:sticky top-0 flex-col hidden mr-2 lg:mr-4 lg:w-1/4 lg:h-[calc(100vh-1.5rem)] gap-y-6 lg:flex overflow-y-auto z-10" id="openFilterParent">
-            <div class="lg:relative bg-[#1a1f2b] border border-[#2d323b] w-[calc(100%-5rem)] md:w-3/4 lg:w-full top-16 right-0 flex-col hidden px-6 py-8 overflow-y-auto rounded-xl shadow-xl bottom-2 gap-y-6 lg:flex"
-                id="filterElement">
-                
-                <!-- Close Button (Mobile) -->
-                <button class="absolute lg:hidden top-5 right-5 text-gray-400 hover:text-gray-600 transition-colors duration-150" 
-                        onclick="closeFilter()">
-                    <i class="text-2xl fa-solid fa-xmark"></i>
-                </button>
-
-                <!-- Header -->
-                <div class="flex flex-row items-center justify-between w-full pb-4 border-b border-[#2d323b] mt-3 lg:mt-0">
-                    <div class="flex items-center gap-x-3">
-                        <p class="text-xl font-semibold text-white">
-                            <span>Filters</span>
-                        </p>
-                        <div class="p-1.5 rounded-md bg-green-600/20 border border-green-600/30">
-                            <img src="{% static 'assets/filter.svg' %}" alt="Filter Icon" class="w-5 h-5 filter invert">
-                        </div>
-                    </div>
-                    {% if applied_filter %}
-                    <a href='{% url "explore_dev" %}' class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-400 hover:text-green-400 rounded-lg transition-all duration-300 group">
-                        <span class="transition-all duration-200 group-hover:font-medium">Reset</span>
-                        <i class="fa-solid fa-arrow-rotate-left text-xs transition-transform duration-500 group-hover:rotate-180"></i>
-                    </a>
-                    {% endif %}
-                </div>
-
-                <!-- Status Filter -->
-                <div class="space-y-3">
-                    <p class="text-base font-medium text-white flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-green-400"></span>
-                        Status
-                        <i class="fa-solid fa-user text-green-400"></i>
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        {% for status in status_list %}
-                        <a href="?skill={{ request.GET.skill|default:'' }}&status={% if request.GET.status == status.id|stringformat:'s' %}{% else %}{{ status.id }}{% endif %}"
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200
-                                {% if request.GET.status == status.id|stringformat:'s' %} 
-                                    bg-green-600/20 border-green-500 text-green-400
-                                {% else %} 
-                                    bg-[#262b34] border-[#2d323b] text-gray-300 hover:border-green-500/50 hover:text-green-400
-                                {% endif %}">
-                            {{status.name}}
-                            {% if request.GET.status == status.id|stringformat:'s' %}
-                            <i class="ml-1.5 text-xs fa-solid fa-xmark opacity-70 hover:opacity-100 transition-opacity"></i>
-                            {% endif %}
-                        </a>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <!-- Skills Filter -->
-                <div class="space-y-3">
-                    <p class="text-base font-medium text-white flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-green-400"></span>
-                        Skills
-                        <i class="fa-solid fa-code text-green-400"></i>
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        {% for skill in top_skill %}
-                        <a href="?status={{request.GET.status|default:''}}&skill={% if request.GET.skill == skill.id|stringformat:'s' %}{% else %}{{ skill.id }}{% endif %}" 
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200
-                                {% if request.GET.skill == skill.id|stringformat:'s' %} 
-                                    bg-green-600/20 border-green-500 text-green-400
-                                {% else %} 
-                                    bg-[#262b34] border-[#2d323b] text-gray-300 hover:border-green-500/50 hover:text-green-400
-                                {% endif %}">
-                            {{ skill.name }}
-                            {% if request.GET.skill == skill.id|stringformat:'s' %}
-                            <i class="ml-1.5 text-xs fa-solid fa-xmark opacity-70 hover:opacity-100 transition-opacity"></i>
-                            {% endif %}
-                        </a>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 max-w-5xl mx-auto px-4 sm:px-6 py-6">
+            <!-- Recommended Developers Section -->
+            {% include 'includes/recommended_developers.html' %}
         </div>
     </div>
 

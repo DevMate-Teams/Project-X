@@ -1,0 +1,149 @@
+{% load static %}
+
+{# People You May Know - Developer Recommendations #}
+{% if recommendations %}
+<div class="w-full bg-[#0d1117] rounded-xl border border-[#30363d] shadow-sm overflow-hidden mb-6">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-[#21262d] bg-gradient-to-r from-[#161b22] to-[#0d1117]">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <i class="fa-solid fa-users text-white text-lg"></i>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-[#e6edf3]">
+                    People You May Know
+                </h2>
+                <p class="text-xs text-[#7d8590]">Personalized developer recommendations</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recommendations Grid -->
+    <div class="p-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {% for developer, score, reason in recommendations %}
+            <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 hover:border-[#58a6ff] transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10 flex flex-col">
+                <!-- Avatar & Info -->
+                <div class="flex flex-col items-center text-center mb-4">
+                    <a href="{% url 'user_profile' developer.user.username %}" class="mb-3">
+                        <img src="{{ developer.profile_image.url }}?v={{ developer.updated_at.timestamp }}" 
+                             alt="{{ developer.user.username }}"
+                             class="w-16 h-16 rounded-full border-2 border-[#30363d] hover:border-[#58a6ff] transition-colors object-cover">
+                    </a>
+                    
+                    <a href="{% url 'user_profile' developer.user.username %}" 
+                       class="font-semibold text-[#e6edf3] hover:text-[#58a6ff] transition-colors text-sm mb-1">
+                        @{{ developer.user.username }}
+                    </a>
+                    
+                    {% if developer.city and developer.state %}
+                    <p class="text-xs text-[#7d8590]">
+                        <i class="fa-solid fa-location-dot text-[10px]"></i>
+                        {{ developer.city }}, {{ developer.state }}
+                    </p>
+                    {% endif %}
+                </div>
+                
+                <!-- Reason for recommendation -->
+                <div class="mb-4 px-3 py-2 bg-[#0d1117]/50 rounded-lg border border-[#21262d]">
+                    <p class="text-xs text-[#7d8590] text-center">
+                        <i class="fa-solid fa-lightbulb text-yellow-500 text-[10px]"></i>
+                        {{ reason }}
+                    </p>
+                </div>
+                
+                <!-- Coding Style Badge -->
+                {% if developer.coding_style %}
+                <div class="mb-4 flex items-center justify-center gap-2 px-3 py-1.5 bg-[#0d1117]/30 rounded-lg border border-[#21262d]">
+                    <img src="{% static 'assets/coding-style-logo/' %}{{ developer.coding_style.logo }}" 
+                         alt="{{ developer.coding_style.name }}"
+                         class="w-4 h-4">
+                    <span class="text-xs text-[#e6edf3]">{{ developer.coding_style.name }}</span>
+                </div>
+                {% endif %}
+                
+                <!-- Actions -->
+                <div class="mt-auto flex gap-2">
+                    <button onclick="followUser('{{ developer.id }}', this)" 
+                            class="flex-1 py-2 px-3 bg-[#6feb85] text-black cursor-pointer rounded-lg transition-all duration-200 text-sm font-medium">
+                        <i class="fa-solid fa-user-plus text-xs mr-1"></i>
+                        Follow
+                    </button>
+                    <button onclick="dismissRecommendation('{{ developer.id }}', this)" 
+                            class="py-2 px-3 bg-[#21262d] hover:bg-[#30363d] text-[#7d8590] hover:text-[#e6edf3] rounded-lg transition-all duration-200 text-sm"
+                            title="Dismiss">
+                        <i class="fa-solid fa-times text-xs"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Actions -->
+<script>
+async function followUser(userId, button) {
+    const card = button.closest('.bg-\\[\\#161b22\\]');
+    button.disabled = true;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs mr-1"></i> Following...';
+    
+    try {
+        const response = await fetch(`/follow/${userId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            button.innerHTML = '<i class="fa-solid fa-check text-xs mr-1"></i> Following';
+            button.classList.remove('bg-[#1f6feb]', 'hover:bg-[#1a56db]');
+            button.classList.add('bg-green-600', 'cursor-default');
+            
+            // Fade out card after 1 second
+            setTimeout(() => {
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+                setTimeout(() => card.remove(), 300);
+            }, 1000);
+        } else {
+            throw new Error('Follow failed');
+        }
+    } catch (error) {
+        console.error('Follow error:', error);
+        button.disabled = false;
+        button.innerHTML = '<i class="fa-solid fa-user-plus text-xs mr-1"></i> Follow';
+        alert('Failed to follow user. Please try again.');
+    }
+}
+
+function dismissRecommendation(userId, button) {
+    const card = button.closest('.bg-\\[\\#161b22\\]');
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.95)';
+    setTimeout(() => card.remove(), 300);
+    
+    // Optional: store dismissal in localStorage or backend
+    const dismissed = JSON.parse(localStorage.getItem('dismissed_recommendations') || '[]');
+    dismissed.push(userId);
+    localStorage.setItem('dismissed_recommendations', JSON.stringify(dismissed));
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endif %}

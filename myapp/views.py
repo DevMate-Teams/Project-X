@@ -22,7 +22,6 @@ from itertools import groupby
 from .algorithms import get_explore_users, get_personalized_feed, top_skills_list
 from allauth.account.views import PasswordChangeView
 from django.contrib import messages
-from .utils import verified_user_ids
 from datetime import date, timedelta
 
 #Logs
@@ -293,6 +292,16 @@ def user_profile(request, user_name):
             editprofile_form = EditProfileForm(request.POST, request.FILES, instance = request.user.info)
             if editprofile_form.is_valid():
                 userinfo_obj = editprofile_form.save(commit=False)
+                
+                # Extract and save location data
+                city = request.POST.get('city')
+                state = request.POST.get('state')
+                country = request.POST.get('country')
+                
+                if city: userinfo_obj.city = city
+                if state: userinfo_obj.state = state
+                if country: userinfo_obj.country = country
+                
                 cropped_image_data = request.POST.get('croppedImage', '')
                 if cropped_image_data:
                     try:
@@ -396,53 +405,20 @@ def follow_list(request, username):
 #explore page:
 @login_required
 def explore_dev(request):
-
-    status_filter = request.GET.get('status', '').strip()  #ID
-    skill_filter = request.GET.get('skill', '').strip()    #ID
-    query = request.GET.get('q', '').strip()
+    from .utils.recommendations import get_recommended_developers
     
-    filter_conditions = {}
-    if status_filter:
-        filter_conditions["status__id"] = status_filter 
-    if skill_filter:
-        filter_conditions["skills__id"] = skill_filter
+    # Get personalized recommendations
+    recommendations = get_recommended_developers(
+        user=request.user,
+        limit=12,
+        exclude_following=True,
+        use_cache=True
+    )
     
-    filter_dev = userinfo.objects.filter(**filter_conditions).exclude(user=request.user).filter(user__in=verified_user_ids).select_related('user')
-
-    if query:
-        filter_dev = filter_dev.filter(
-            Q(user__first_name__icontains=query) |
-            Q(user__last_name__icontains=query) |
-            Q(user__username__iexact=query) |
-            Q(skills__name__iexact=query) |
-            Q(status__name__iexact=query) |
-            Q(about_user__icontains=query)
-        ).distinct()
-    
-    applied_filter = bool(status_filter or skill_filter)
-    
-    if not (applied_filter or query):
-        filter_dev = get_explore_users(filter_dev, request)
-        
-    top_skill= top_skills_list()
-    status = user_status.objects.all()
-    #Pagination
-    p = Paginator(filter_dev, 25)
-    page_number = request.GET.get('page')
-    try:
-        page_obj = p.page(page_number)
-    except PageNotAnInteger:
-        page_obj = p.page(1)
-    r = filter_dev.count()
     context = {
-        'filter_user': page_obj,
-        'top_skill': top_skill,
-        'status_list': status,   
-        'total_result': r,  
-        'query': query,
-        'applied_filter': applied_filter,
-        'active_explore_dev': True
+        'recommendations': recommendations,
     }
+    
     return render(request, 'myapp/explore_dev.html', context)
 
 

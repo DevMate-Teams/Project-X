@@ -70,9 +70,31 @@
                 {{ep_form.dob}}
             </div>
             <div>
-                <div class="flex flex-col gap-y-1 w-full">
+                <div class="flex flex-col gap-y-1 w-full relative">
                     <p>{{ep_form.location.label}}</p>
-                    {{ep_form.location}}
+                    <!-- Autocomplete Input -->
+                    <input type="text" 
+                           id="location-search" 
+                           name="location" 
+                           value="{{userinfo_obj.location|default:''}}" 
+                           placeholder="Search for your city..." 
+                           class="bg-[#161b22] border border-[#30363d] text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                           autocomplete="off">
+                    
+                    <!-- Dropdown Results -->
+                    <div id="location-results" class="absolute top-full left-0 w-full bg-[#161b22] border border-[#30363d] rounded-b-lg shadow-xl z-50 hidden max-h-60 overflow-y-auto">
+                        <!-- Results populated by JS -->
+                    </div>
+                    
+                    <!-- Hidden Fields for Structured Data -->
+                    <input type="hidden" name="city" id="city" value="{{userinfo_obj.city|default:''}}">
+                    <input type="hidden" name="state" id="state" value="{{userinfo_obj.state|default:''}}">
+                    <input type="hidden" name="country" id="country" value="{{userinfo_obj.country|default:''}}">
+                    
+                    <!-- Loading Indicator -->
+                    <div id="location-loading" class="absolute right-3 top-9 hidden">
+                        <i class="fa-solid fa-spinner fa-spin text-gray-400"></i>
+                    </div>
                 </div>
             </div>
             <div class="max-[500px]:flex-col gap-y-3 flex gap-x-3 ">
@@ -276,6 +298,99 @@
     
     </div>
 </form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('location-search');
+        const resultsDiv = document.getElementById('location-results');
+        const loadingDiv = document.getElementById('location-loading');
+        const cityInput = document.getElementById('city');
+        const stateInput = document.getElementById('state');
+        const countryInput = document.getElementById('country');
+        
+        let debounceTimer;
+        
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value;
+            
+            // Clear previous timeout
+            clearTimeout(debounceTimer);
+            
+            if (query.length < 3) {
+                resultsDiv.classList.add('hidden');
+                return;
+            }
+            
+            // Show loading
+            loadingDiv.classList.remove('hidden');
+            
+            // Debounce API call
+            debounceTimer = setTimeout(() => {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5`, {
+                    headers: {
+                        'Accept-Language': 'en-US,en;q=0.5',
+                        'User-Agent': 'DevMate/1.0'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = '';
+                    loadingDiv.classList.add('hidden');
+                    
+                    if (data.length > 0) {
+                        resultsDiv.classList.remove('hidden');
+                        
+                        data.forEach(place => {
+                            const address = place.address;
+                            const city = address.city || address.town || address.village || address.hamlet || '';
+                            const state = address.state || address.region || '';
+                            const country = address.country || '';
+                            
+                            // Create result item
+                            const div = document.createElement('div');
+                            div.className = 'p-3 hover:bg-[#262b34] cursor-pointer border-b border-[#30363d] last:border-0 transition-colors';
+                            div.innerHTML = `
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-location-dot text-gray-400 text-xs"></i>
+                                    <div>
+                                        <p class="text-sm text-white font-medium">${place.display_name.split(',')[0]}</p>
+                                        <p class="text-xs text-gray-400">${place.display_name}</p>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            div.addEventListener('click', () => {
+                                // Update inputs
+                                searchInput.value = place.display_name;
+                                cityInput.value = city;
+                                stateInput.value = state;
+                                countryInput.value = country;
+                                
+                                // Hide results
+                                resultsDiv.classList.add('hidden');
+                            });
+                            
+                            resultsDiv.appendChild(div);
+                        });
+                    } else {
+                        resultsDiv.classList.add('hidden');
+                    }
+                })
+                .catch(err => {
+                    console.error('Location search error:', err);
+                    loadingDiv.classList.add('hidden');
+                });
+            }, 500); // 500ms debounce
+        });
+        
+        // Close results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+                resultsDiv.classList.add('hidden');
+            }
+        });
+    });
+</script>
 
 
 

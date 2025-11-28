@@ -20,13 +20,6 @@
             <span class="text-[16px]">Home</span>
         </a>
 
-        <!-- Logs -->
-        <a href="{% url 'index' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group
-            {% if active_logs %}bg-white/5 text-white font-medium{% else %}text-[#a8b3cf] hover:bg-[#161b22] hover:text-white{% endif %}">
-            <i class="fa-solid fa-book text-xl w-6 text-center"></i>
-            <span class="text-[16px]">Logs</span>
-        </a>
-
         <!-- Discover -->
         <a href="{% url 'explore_dev' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group
             {% if active_explore_dev %}bg-white/5 text-white font-medium{% else %}text-[#a8b3cf] hover:bg-[#161b22] hover:text-white{% endif %}">
@@ -83,12 +76,6 @@
         <a href="{% url 'index' %}" class="flex flex-col items-center justify-center w-full h-full gap-1
             {% if active_home %}text-white{% else %}text-[#7d8590]{% endif %}">
             <i class="fa-solid fa-house text-xl"></i>
-        </a>
-
-        <!-- Logs -->
-        <a href="{% url 'index' %}" class="flex flex-col items-center justify-center w-full h-full gap-1
-            {% if active_logs %}text-white{% else %}text-[#7d8590]{% endif %}">
-            <i class="fa-solid fa-book text-xl"></i>
         </a>
 
         <!-- Notifications (Center - Most Prominent) -->
