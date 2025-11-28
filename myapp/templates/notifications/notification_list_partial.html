@@ -1,0 +1,21 @@
+{% load static %}
+
+{# Partial template for rendering notification groups - used for AJAX pagination #}
+{% for group, notifications in grouped_notifications.items %}
+<div>
+    <!-- Date Group Header -->
+    <div class="px-8 py-3 bg-[#161b22] border-b border-[#21262d]">
+        <p class="text-xs font-bold text-[#7d8590] uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-regular fa-calendar text-[10px]"></i>
+            {{ group }}
+        </p>
+    </div>
+    
+    <!-- Notification Items -->
+    <div>
+        {% for notification in notifications %}
+            {% include 'notifications/notification_item.html' with notification=notification %}
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}

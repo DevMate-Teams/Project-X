@@ -563,12 +563,24 @@ def get_coding_styles(request):
 @login_required
 def notification_page(request):
     """
-    Display notifications page with grouped notifications
+    Display notifications page with grouped notifications and pagination
     """
     from logs.utils.notifications import get_user_notifications, get_notification_count, group_notifications_by_date
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
     
-    # Get all notifications for the user
-    notifications = get_user_notifications(request.user, limit=50)
+    # Get all notifications for the user (without limit for pagination)
+    all_notifications = get_user_notifications(request.user)
+    
+    # Paginate notifications (20 per page)
+    paginator = Paginator(all_notifications, 20)
+    page = request.GET.get('page', 1)
+    
+    try:
+        notifications = paginator.page(page)
+    except PageNotAnInteger:
+        notifications = paginator.page(1)
+    except EmptyPage:
+        notifications = paginator.page(paginator.num_pages)
     
     # Group by date
     grouped_notifications = group_notifications_by_date(notifications)
@@ -580,6 +592,8 @@ def notification_page(request):
         'grouped_notifications': grouped_notifications,
         'notification_count': notification_count,
         'active_notifications': True,
+        'page_obj': notifications,
+        'paginator': paginator,
     }
     
     return render(request, 'myapp/notification.html', context)
@@ -638,3 +652,47 @@ def mark_notification_read(request, notification_id):
             'success': False,
             'error': 'Notification not found'
         }, status=404)
+
+
+@login_required
+def load_more_notifications(request):
+    """
+    AJAX endpoint to load more notifications for pagination
+    """
+    from logs.utils.notifications import get_user_notifications, group_notifications_by_date
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    from django.template.loader import render_to_string
+    
+    page = request.GET.get('page', 2)
+    
+    # Get all notifications
+    all_notifications = get_user_notifications(request.user)
+    
+    # Paginate
+    paginator = Paginator(all_notifications, 20)
+    
+    try:
+        notifications = paginator.page(page)
+    except PageNotAnInteger:
+        return JsonResponse({'error': 'Invalid page number'}, status=400)
+    except EmptyPage:
+        return JsonResponse({
+            'html': '',
+            'has_more': False,
+            'next_page': None
+        })
+    
+    # Group by date
+    grouped_notifications = group_notifications_by_date(notifications)
+    
+    # Render HTML for notifications
+    html = render_to_string('notifications/notification_list_partial.html', {
+        'grouped_notifications': grouped_notifications,
+    }, request=request)
+    
+    return JsonResponse({
+        'html': html,
+        'has_more': notifications.has_next(),
+        'next_page': notifications.next_page_number() if notifications.has_next() else None,
+        'current_page': notifications.number
+    })

@@ -40,7 +40,7 @@
                 </div>
                 
                 <!-- Notifications List -->
-                <div class="divide-y divide-[#21262d]">
+                <div id="notifications-container" class="divide-y divide-[#21262d]">
                     {% if grouped_notifications %}
                         {% for group, notifications in grouped_notifications.items %}
                         <div>
@@ -74,12 +74,37 @@
                     {% endif %}
                 </div>
                 
+                <!-- Load More Button -->
+                {% if page_obj.has_next %}
+                <div class="border-t border-[#21262d] px-6 py-6 flex justify-center">
+                    <button id="load-more-btn" 
+                            data-next-page="{{ page_obj.next_page_number }}"
+                            class="px-6 py-2.5 bg-[#21262d] hover:bg-[#30363d] text-[#e6edf3] rounded-lg transition-colors duration-200 flex items-center gap-2 font-medium">
+                        <i class="fa-solid fa-chevron-down text-sm"></i>
+                        <span>Load More</span>
+                    </button>
+                    
+                    <!-- Loading Spinner (hidden by default) -->
+                    <div id="loading-spinner" class="hidden">
+                        <div class="flex items-center gap-2 text-[#7d8590]">
+                            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-sm">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
             </div>
         </div>
     </div>
 
-    <!-- Include notification JavaScript -->
-    <script src="{% static 'scripts/notifications.js' %}"></script>
+    <!-- Pagination Script -->
+    <script src="{% static 'scripts/notification-pagination.js' %}" defer></script>
+    
+    <!-- Handle notification click -->
     <script>
         // Handle notification click
         function handleNotificationClick(notificationId, targetUrl) {

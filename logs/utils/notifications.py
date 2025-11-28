@@ -43,15 +43,17 @@ def create_notification(recipient, actor, verb, target, action_object=None, noti
     )
 
 
-def get_user_notifications(user, unread_only=False, notification_type=None, limit=None):
+def get_user_notifications(user, unread_only=False, notification_type=None, limit=None, page_size=None, offset=0):
     """
-    Fetch notifications for a user with optional filtering
+    Fetch notifications for a user with optional filtering and pagination
     
     Args:
         user: User object or userinfo object
         unread_only: Boolean to filter only unread notifications
         notification_type: Optional type filter
-        limit: Optional limit on number of notifications
+        limit: Optional limit on number of notifications (deprecated, use page_size)
+        page_size: Number of notifications per page (for pagination)
+        offset: Starting position for pagination
     
     Returns:
         QuerySet of Notification objects
@@ -79,7 +81,11 @@ def get_user_notifications(user, unread_only=False, notification_type=None, limi
     if notification_type:
         notifications = notifications.filter(notification_type=notification_type)
     
-    if limit:
+    # Apply pagination or limit
+    if page_size:
+        end = offset + page_size
+        notifications = notifications[offset:end]
+    elif limit:
         notifications = notifications[:limit]
     
     return notifications

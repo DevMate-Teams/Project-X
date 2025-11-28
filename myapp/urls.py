@@ -32,6 +32,7 @@ urlpatterns = [
     
     # Notifications
     path('notifications/', views.notification_page, name='notification_page'),
+    path('notifications/load-more/', views.load_more_notifications, name='load_more_notifications'),
     path('notifications/mark-all-read/', views.mark_all_read, name='mark_all_read'),
     path('notifications/count/', views.get_notification_count_api, name='get_notification_count'),
     path('notifications/<int:notification_id>/mark-read/', views.mark_notification_read, name='mark_notification_read'),
