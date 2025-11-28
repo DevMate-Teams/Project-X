@@ -3,7 +3,7 @@
 
 {# People You May Know - Developer Recommendations #}
 {% if recommendations %}
-<div class="w-full bg-[#0d1117] rounded-xl border border-[#30363d] shadow-sm overflow-hidden lg:mb-6 mb-10">
+<div class="w-full bg-[#010409] rounded-xl border border-[#30363d] shadow-sm overflow-hidden lg:mb-6 mb-10">
     <!-- Header -->
     <div class="px-6 py-4 border-b border-[#21262d] bg-gradient-to-r from-[#161b22] to-[#0d1117]">
         <div class="flex items-center gap-3">
@@ -20,58 +20,73 @@
     </div>
     
     <!-- Recommendations Grid -->
-    <div class="p-2 sm:p-6">
-        <div id="recommendations-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div class="p-2 lg:p-4 mt-3">
+        <div id="recommendations-grid" class="grid grid-cols-2 md:grid-cols-4 gap-2 lg:gap-4">
             {% for developer, score, reason in recommendations %}
-            <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 transition-all duration-200 hover:shadow-lg flex flex-col">
-                <!-- Avatar & Info -->
-                <div class="flex flex-col items-center text-center mb-4">
-                    <a href="{% url 'user_profile' developer.user.username %}" class="mb-3">
-                        <img src="{{ developer.profile_image.url }}?v={{ developer.updated_at.timestamp }}" 
-                             alt="{{ developer.user.username }}"
-                             class="w-16 h-16 rounded-full border-2 border-[#30363d] transition-colors object-cover">
-                    </a>
+            <div class="group bg-[#0d1117] border border-[#30363d] rounded-xl p-2 py-4 pt-8 transition-all duration-200 flex flex-col items-center relative overflow-hidden">
+                
+                <!-- Reason Badge (Prominent Top) -->
+                <div class="absolute top-0 left-0 w-full bg-[#161b22] border-b border-[#30363d] py-1.5 px-3 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-sparkles text-yellow-500 text-[10px]"></i>
+                    <span class="text-[10px] font-medium text-[#c9d1d9] truncate max-w-[90%]">{{ reason }}</span>
+                </div>
+                
+                <!-- Avatar -->
+                <a href="{% url 'user_profile' developer.user.username %}" class="mb-3 mt-2 relative group-hover:scale-105 transition-transform duration-300">
+                    <img src="{{ developer.profile_image.url }}?v={{ developer.updated_at.timestamp }}" 
+                         alt="{{ developer.user.username }}"
+                         class="w-20 h-20 rounded-full border-2 border-[#30363d] group-hover:border-[#8b949e] transition-colors object-cover bg-[#161b22] shadow-md">
                     
+                    {% if user.info|is_following:developer %}
+                    <div class="absolute -bottom-1 -right-1 bg-[#238636] text-white text-xs w-6 h-6 flex items-center justify-center rounded-full border-[3px] border-[#0d1117] shadow-sm">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    {% endif %}
+                </a>
+                
+                <!-- Info -->
+                <div class="text-center mb-3 w-full px-2">
                     <a href="{% url 'user_profile' developer.user.username %}" 
-                       class="font-semibold text-[#e6edf3] transition-colors text-sm mb-1">
+                       class="block font-bold text-[#e6edf3] hover:text-green-600 transition-colors text-base truncate mb-0.5">
+                        {{ developer.user.first_name }} {{ developer.user.last_name }}
+                    </a>
+                    <a href="{% url 'user_profile' developer.user.username %}" 
+                       class="block text-xs text-[#8b949e] hover:text-green-600 transition-colors truncate font-mono">
                         @{{ developer.user.username }}
                     </a>
+                </div>
+
+                <!-- Meta Info (Location & Coding Style) -->
+                <div class="flex items-center justify-center gap-2 mb-4 w-full px-2">
+                    {% if developer.coding_style %}
+                    <div class="px-2 py-2 rounded-full bg-[#161b22] border border-[#30363d]" title="Coding Style: {{ developer.coding_style.name }}">
+                        <img src="{% static 'assets/coding-style-logo/' %}{{ developer.coding_style.logo }}" 
+                             alt="{{ developer.coding_style.name }}"
+                             class="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    {% endif %}
                     
-                    {% if developer.city and developer.state %}
-                    <p class="text-xs text-[#7d8590]">
-                        <i class="fa-solid fa-location-dot text-[10px]"></i>
-                        {{ developer.city }}, {{ developer.state }}
-                    </p>
+                    {% if developer.city %}
+                    <div class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[#161b22] border border-[#30363d]" title="{{ developer.city }}">
+                        <i class="fa-solid fa-location-dot text-[10px] text-[#8b949e]"></i>
+                        <span class="text-[10px] text-[#c9d1d9] truncate max-w-[9ch]">{{ developer.city }}</span>
+                    </div>
                     {% endif %}
                 </div>
 
                 <!-- Actions -->
-                {% if user.info|is_following:developer %}
-                    <a href="javascript:void(0);" class="follow-btn px-4 text-center py-2 bg-[#262b34] text-white font-mono text-sm rounded-md hover:scale-[1.03] transition" data-user-id="{{ developer.id }}">
-                        <span class="btn-text">&lt;Unfollow/&gt;</span>
-                    </a>
-                {% else %}
-                    <a href="javascript:void(0);" class="follow-btn px-4 text-center py-2 bg-[#6feb85] text-black font-mono text-sm rounded-md hover:scale-[1.03] transition mb-4" data-user-id="{{ developer.id }}">
-                        <span class="btn-text">&lt;Follow/&gt;</span>
-                    </a>
-                {% endif %}
-                
-                <!-- Coding Style Badge -->
-                {% if developer.coding_style %}
-                <div class="mb-4 rounded-full flex items-center justify-center gap-2 px-3 py-1.5 bg-[#0d1117]/30 border border-[#21262d]">
-                    <img src="{% static 'assets/coding-style-logo/' %}{{ developer.coding_style.logo }}" 
-                         alt="{{ developer.coding_style.name }}"
-                         class="w-6 h-6">
-                    <span class="text-xs text-[#e6edf3]">{{ developer.coding_style.name }}</span>
-                </div>
-                {% endif %}
-
-                <!-- Reason for recommendation -->
-                <div class="mb-4 px-3 py-2 bg-[#0d1117]/50 rounded-lg border border-[#21262d]">
-                    <p class="text-xs text-[#7d8590] text-center">
-                        <i class="fa-solid fa-lightbulb text-yellow-500 text-[10px]"></i>
-                        {{ reason }}
-                    </p>
+                <div class="w-full mt-auto px-2">
+                    {% if user.info|is_following:developer %}
+                        <button onclick="toggleFollow('{{ developer.id }}', this)" 
+                                class="w-full py-2 px-4 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] border border-[#30363d] rounded-lg transition-all duration-200 text-xs font-medium shadow-sm hover:shadow">
+                            Unfollow
+                        </button>
+                    {% else %}
+                        <button onclick="toggleFollow('{{ developer.id }}', this)" 
+                                class="w-full py-2 px-4 bg-[#238636] hover:bg-[#2ea043] text-white border border-[rgba(240,246,252,0.1)] rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0">
+                            Follow
+                        </button>
+                    {% endif %}
                 </div>
                 
             </div>
@@ -149,67 +164,139 @@ document.addEventListener('DOMContentLoaded', function() {
 // Create recommendation card HTML
 function createRecommendationCard(dev) {
     const card = document.createElement('div');
-    card.className = 'bg-[#161b22] border border-[#30363d] rounded-lg p-4 transition-all duration-200 hover:shadow-lg flex flex-col';
+    card.className = 'group bg-[#0d1117] border border-[#30363d] rounded-xl p-2 py-4 pt-8 transition-all duration-200 flex flex-col items-center relative overflow-hidden';
     
     const followBtn = dev.is_following ? `
-        <a href="javascript:void(0);" class="follow-btn px-4 text-center py-2 bg-[#262b34] text-white font-mono text-sm rounded-md hover:scale-[1.03] transition" data-user-id="${dev.id}">
-            <span class="btn-text">&lt;Unfollow/&gt;</span>
-        </a>
+        <button onclick="toggleFollow('${dev.id}', this)" 
+                class="w-full py-2 px-4 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] border border-[#30363d] rounded-lg transition-all duration-200 text-xs font-medium shadow-sm hover:shadow">
+            Unfollow
+        </button>
     ` : `
-        <a href="javascript:void(0);" class="follow-btn px-4 text-center py-2 bg-[#6feb85] text-black font-mono text-sm rounded-md hover:scale-[1.03] transition mb-4" data-user-id="${dev.id}">
-            <span class="btn-text">&lt;Follow/&gt;</span>
-        </a>
+        <button onclick="toggleFollow('${dev.id}', this)" 
+                class="w-full py-2 px-4 bg-[#238636] hover:bg-[#2ea043] text-white border border-[rgba(240,246,252,0.1)] rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0">
+            Follow
+        </button>
     `;
     
     const codingStyleBadge = dev.coding_style ? `
-        <div class="mb-4 rounded-full flex items-center justify-center gap-2 px-3 py-1.5 bg-[#0d1117]/30 border border-[#21262d]">
+        <div class="px-2 py-2 rounded-full bg-[#161b22] border border-[#30363d]" title="Coding Style: ${dev.coding_style.name}">
             <img src="/static/assets/coding-style-logo/${dev.coding_style.logo}" 
                  alt="${dev.coding_style.name}"
-                 class="w-6 h-6">
-            <span class="text-xs text-[#e6edf3]">${dev.coding_style.name}</span>
+                 class="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity">
         </div>
     ` : '';
     
-    const locationText = dev.city && dev.state ? `
-        <p class="text-xs text-[#7d8590]">
-            <i class="fa-solid fa-location-dot text-[10px]"></i>
-            ${dev.city}, ${dev.state}
-        </p>
+    const locationBadge = dev.city ? `
+        <div class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[#161b22] border border-[#30363d]" title="${dev.city}">
+            <i class="fa-solid fa-location-dot text-[10px] text-[#8b949e]"></i>
+            <span class="text-[10px] text-[#c9d1d9] truncate max-w-[9ch]">${dev.city}</span>
+        </div>
+    ` : '';
+    
+    const followingIndicator = dev.is_following ? `
+        <div class="absolute -bottom-1 -right-1 bg-[#238636] text-white text-xs w-6 h-6 flex items-center justify-center rounded-full border-[3px] border-[#0d1117] shadow-sm">
+            <i class="fa-solid fa-check"></i>
+        </div>
     ` : '';
     
     card.innerHTML = `
-        <!-- Avatar & Info -->
-        <div class="flex flex-col items-center text-center mb-4">
-            <a href="/user-profile/${dev.username}/" class="mb-3">
-                <img src="${dev.avatar || '/static/user_profile_img/profile.jpg'}" 
-                     alt="${dev.username}"
-                     class="w-16 h-16 rounded-full border-2 border-[#30363d] transition-colors object-cover">
-            </a>
-            
+        <!-- Reason Badge (Prominent Top) -->
+        <div class="absolute top-0 left-0 w-full bg-[#161b22] border-b border-[#30363d] py-1.5 px-3 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-sparkles text-yellow-500 text-[10px]"></i>
+            <span class="text-[10px] font-medium text-[#c9d1d9] truncate max-w-[90%]">${dev.reason}</span>
+        </div>
+        
+        <!-- Avatar -->
+        <a href="/user-profile/${dev.username}/" class="mb-3 mt-2 relative group-hover:scale-105 transition-transform duration-300">
+            <img src="${dev.avatar || '/static/user_profile_img/profile.jpg'}" 
+                 alt="${dev.username}"
+                 class="w-20 h-20 rounded-full border-2 border-[#30363d] group-hover:border-[#8b949e] transition-colors object-cover bg-[#161b22] shadow-md">
+            ${followingIndicator}
+        </a>
+        
+        <!-- Info -->
+        <div class="text-center mb-3 w-full px-2">
             <a href="/user-profile/${dev.username}/" 
-               class="font-semibold text-[#e6edf3] transition-colors text-sm mb-1">
+               class="block font-bold text-[#e6edf3] hover:text-green-600 transition-colors text-base truncate mb-0.5">
+                ${dev.first_name || dev.username} ${dev.last_name || ''}
+            </a>
+            <a href="/user-profile/${dev.username}/" 
+               class="block text-xs text-[#8b949e] hover:text-green-600 transition-colors truncate font-mono">
                 @${dev.username}
             </a>
-            
-            ${locationText}
+        </div>
+
+        <!-- Meta Info (Location & Coding Style) -->
+        <div class="flex items-center justify-center gap-2 mb-4 w-full px-2">
+            ${codingStyleBadge}
+            ${locationBadge}
         </div>
 
         <!-- Actions -->
-        ${followBtn}
-        
-        <!-- Coding Style Badge -->
-        ${codingStyleBadge}
-
-        <!-- Reason for recommendation -->
-        <div class="mb-4 px-3 py-2 bg-[#0d1117]/50 rounded-lg border border-[#21262d]">
-            <p class="text-xs text-[#7d8590] text-center">
-                <i class="fa-solid fa-lightbulb text-yellow-500 text-[10px]"></i>
-                ${dev.reason}
-            </p>
+        <div class="w-full mt-auto px-2">
+            ${followBtn}
         </div>
     `;
     
     return card;
+}
+
+async function toggleFollow(userId, button) {
+    const isFollowing = button.textContent.trim() === 'Unfollow';
+    const originalContent = button.innerHTML;
+    const originalClasses = button.className;
+    
+    // Optimistic UI update
+    button.disabled = true;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    
+    try {
+        const url = isFollowing ? `/unfollow/${userId}/` : `/follow/${userId}/`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            // Toggle state
+            if (isFollowing) {
+                // Now not following
+                button.textContent = 'Follow';
+                button.className = 'w-full py-2 px-4 bg-[#238636] hover:bg-[#2ea043] text-white border border-[rgba(240,246,252,0.1)] rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0';
+                
+                // Remove checkmark if exists
+                const card = button.closest('.group');
+                const checkmark = card.querySelector('.fa-check')?.parentElement;
+                if (checkmark) checkmark.remove();
+                
+            } else {
+                // Now following
+                button.textContent = 'Unfollow';
+                button.className = 'w-full py-2 px-4 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] border border-[#30363d] rounded-lg transition-all duration-200 text-xs font-medium shadow-sm hover:shadow';
+                
+                // Add checkmark
+                const avatarLink = button.closest('.group').querySelector('a.relative');
+                if (avatarLink && !avatarLink.querySelector('.fa-check')) {
+                    const checkmark = document.createElement('div');
+                    checkmark.className = 'absolute -bottom-1 -right-1 bg-[#238636] text-white text-xs w-6 h-6 flex items-center justify-center rounded-full border-[3px] border-[#0d1117] shadow-sm';
+                    checkmark.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    avatarLink.appendChild(checkmark);
+                }
+            }
+        } else {
+            throw new Error('Action failed');
+        }
+    } catch (error) {
+        console.error('Follow error:', error);
+        button.innerHTML = originalContent;
+        button.className = originalClasses;
+        alert('Failed to update follow status. Please try again.');
+    } finally {
+        button.disabled = false;
+    }
 }
     
 function getCookie(name) {
