@@ -13,141 +13,157 @@
         <!-- sidenav -->
         {% include "includes/sidenav.html" %}
 
-        <!-- Middle and feed section --> 
-        <div class="w-full md:w-4/5 flex justify-center mx-auto">
-            <div class="mt-6 md:mt-6 flex flex-col gap-y-6 w-full max-w-[40rem] mb-20 ">
+        <!-- Main Content Wrapper -->
+        <div class="flex-1 flex flex-col lg:flex-row w-full max-w-7xl mx-auto gap-6 lg:px-4 py-6">
+            
+            <!-- Middle and feed section --> 
+            <div class="flex-1 w-full max-w-2xl mx-auto">
+                <div class="flex flex-col gap-y-6 w-full mb-20">
 
-                <!-- Log UI Form-->
-                <form method = "POST" enctype="multipart/form-data" action="{% url 'save_log' %}" id="log-section" class="space-y-6">
-                    {% csrf_token %}
+                    <!-- Log UI Form-->
+                    <form method = "POST" enctype="multipart/form-data" action="{% url 'save_log' %}" id="log-section" class="space-y-6">
+                        {% csrf_token %}
 
-                    <div class="bg-gray-950 rounded-xl shadow-xl border border-gray-800 overflow-hidden">
+                        <div class="bg-gray-950 rounded-xl shadow-xl border border-gray-800 overflow-hidden">
 
-                        <!-- Log Input -->
-                        <div class="px-4 py-6 flex items-center gap-3">
-                        <span class="text-green-400 text-sm">&gt;_</span>
-                        {{logform.content}}
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex gap-4 -mt-2 ml-4">
-
-                            <!-- Upload Snapshot Icon -->
-                            <button type="button" onclick="document.getElementById('snapshotInput').click();" 
-                                class="bg-gray-800 hover:bg-gray-700 p-3 rounded-full shadow text-green-400 flex items-center justify-center">
-                                <i class="fa fa-picture-o text-sm"></i>
-                            </button>
-                            {{ logform.snap_shot }}
-
-                            <!-- Add Code Snippet Icon -->
-                            <button type="button" onclick="toggleCodeSnippet();" 
-                                class="bg-gray-800 hover:bg-gray-700 p-3 rounded-full shadow text-blue-400 flex items-center justify-center">
-                                <i class="fa fa-code text-sm"></i>
-                            </button>
-
-                            <!-- Add Link Icon -->
-                            <button type="button" onclick="toggleLinkInput();" 
-                                class="bg-gray-800 hover:bg-gray-700 p-3 rounded-full shadow text-purple-400 flex items-center justify-center">
-                                <i class="fa fa-link text-sm"></i>
-                            </button>
-
-                        </div>
-
-                        <!-- Image Preview -->
-                        <div id="imagePreviewContainer" class="relative hidden ml-4 mt-4 w-48">
-                            <img id="imagePreview" src="" alt="Preview" 
-                                class="rounded-md border border-gray-700 w-48 h-48 object-cover shadow-lg">
-                            <button type="button" onclick="remove_log_Image()" 
-                                class="absolute top-1 right-1 bg-black bg-opacity-80 text-white rounded-full px-2 py-0.5 text-xs hover:bg-red-600 cursor-pointer">
-                                ✕
-                            </button>
-                        </div>
-
-                        <!-- Code Snippet Editor -->
-                        <div id="codeSnippetContainer" class="hidden relative mt-6 px-4">
-                            <div class="bg-[#181c23] text-green-300 font-mono rounded-xl border border-gray-700 shadow-xl p-4">
-                                <textarea name="code_snippet"
-                                        rows="10"
-                                        maxlength="5000"
-                                        placeholder="// Write your code here..."
-                                        class="w-full bg-transparent focus:outline-none resize-y text-sm leading-relaxed font-mono text-green-300"
-                                ></textarea>
+                            <!-- Log Input -->
+                            <div class="px-4 py-6 flex items-center gap-3">
+                            <span class="text-green-400 text-sm">&gt;_</span>
+                            {{logform.content}}
                             </div>
-                            <button type="button" onclick="toggleCodeSnippet()"
-                                class="absolute top-2 right-5 bg-gray-800 text-white rounded-full px-2 py-0.5 text-xs hover:bg-red-600 cursor-pointer">
-                                ✕
-                            </button>
-                        </div>
 
-                        <!-- Link Input -->
-                        <div id="linkInputContainer" class="hidden relative mt-6 px-4">
-                            <div class="bg-[#181c23] rounded-lg border border-gray-800 shadow p-4">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <i class="fa fa-link text-green-400 text-xs"></i>
-                                    <span class="text-green-400 font-mono text-xs">Add Link</span>
+                            <!-- Action Buttons -->
+                            <div class="flex gap-4 -mt-2 ml-4">
+
+                                <!-- Upload Snapshot Icon -->
+                                <button type="button" onclick="document.getElementById('snapshotInput').click();" 
+                                    class="bg-gray-800 hover:bg-gray-700 p-3 rounded-full shadow text-green-400 flex items-center justify-center">
+                                    <i class="fa fa-picture-o text-sm"></i>
+                                </button>
+                                {{ logform.snap_shot }}
+
+                                <!-- Add Code Snippet Icon -->
+                                <button type="button" onclick="toggleCodeSnippet();" 
+                                    class="bg-gray-800 hover:bg-gray-700 p-3 rounded-full shadow text-blue-400 flex items-center justify-center">
+                                    <i class="fa fa-code text-sm"></i>
+                                </button>
+
+                                <!-- Add Link Icon -->
+                                <button type="button" onclick="toggleLinkInput();" 
+                                    class="bg-gray-800 hover:bg-gray-700 p-3 rounded-full shadow text-purple-400 flex items-center justify-center">
+                                    <i class="fa fa-link text-sm"></i>
+                                </button>
+
+                            </div>
+
+                            <!-- Image Preview -->
+                            <div id="imagePreviewContainer" class="relative hidden ml-4 mt-4 w-48">
+                                <img id="imagePreview" src="" alt="Preview" 
+                                    class="rounded-md border border-gray-700 w-48 h-48 object-cover shadow-lg">
+                                <button type="button" onclick="remove_log_Image()" 
+                                    class="absolute top-1 right-1 bg-black bg-opacity-80 text-white rounded-full px-2 py-0.5 text-xs hover:bg-red-600 cursor-pointer">
+                                    ✕
+                                </button>
+                            </div>
+
+                            <!-- Code Snippet Editor -->
+                            <div id="codeSnippetContainer" class="hidden relative mt-6 px-4">
+                                <div class="bg-[#181c23] text-green-300 font-mono rounded-xl border border-gray-700 shadow-xl p-4">
+                                    <textarea name="code_snippet"
+                                            rows="10"
+                                            maxlength="5000"
+                                            placeholder="// Write your code here..."
+                                            class="w-full bg-transparent focus:outline-none resize-y text-sm leading-relaxed font-mono text-green-300"
+                                    ></textarea>
                                 </div>
-                                <input type="url" 
-                                       name="link"
-                                       placeholder="Paste link here..."
-                                       class="w-full bg-transparent focus:outline-none text-xs text-green-300 font-mono border-b border-gray-700 pb-1 focus:border-green-500 transition-colors placeholder:text-gray-500"
-                                />
+                                <button type="button" onclick="toggleCodeSnippet()"
+                                    class="absolute top-2 right-5 bg-gray-800 text-white rounded-full px-2 py-0.5 text-xs hover:bg-red-600 cursor-pointer">
+                                    ✕
+                                </button>
                             </div>
-                            <button type="button" onclick="toggleLinkInput()"
-                                class="absolute top-1 right-5 bg-gray-800 text-gray-300 rounded-full px-2 py-0.5 text-xs hover:bg-red-600 hover:text-white transition cursor-pointer shadow">
-                                ✕
-                            </button>
-                        </div>
 
-                        <!-- Commit Button -->
-                        <div class="bg-gray-800 px-3 mt-6 py-2 flex items-center justify-between border-t border-gray-700">
-                            <div class="text-gray-400 text-xs font-mono">
-                                Press <kbd class="px-1 py-0.5 bg-gray-700 rounded text-xs">Enter</kbd> to log
+                            <!-- Link Input -->
+                            <div id="linkInputContainer" class="hidden relative mt-6 px-4">
+                                <div class="bg-[#181c23] rounded-lg border border-gray-800 shadow p-4">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fa fa-link text-green-400 text-xs"></i>
+                                        <span class="text-green-400 font-mono text-xs">Add Link</span>
+                                    </div>
+                                    <input type="url" 
+                                           name="link"
+                                           placeholder="Paste link here..."
+                                           class="w-full bg-transparent focus:outline-none text-xs text-green-300 font-mono border-b border-gray-700 pb-1 focus:border-green-500 transition-colors placeholder:text-gray-500"
+                                    />
+                                </div>
+                                <button type="button" onclick="toggleLinkInput()"
+                                    class="absolute top-1 right-5 bg-gray-800 text-gray-300 rounded-full px-2 py-0.5 text-xs hover:bg-red-600 hover:text-white transition cursor-pointer shadow">
+                                    ✕
+                                </button>
                             </div>
-                            <button type='submit' class="cursor-pointer bg-[#00a63e] hover:bg-green-600 text-white font-semibold text-xs px-3 py-1.5 rounded-md shadow-sm font-mono">
-                                > commit
-                            </button>
+
+                            <!-- Commit Button -->
+                            <div class="bg-gray-800 px-3 mt-6 py-2 flex items-center justify-between border-t border-gray-700">
+                                <div class="text-gray-400 text-xs font-mono">
+                                    Press <kbd class="px-1 py-0.5 bg-gray-700 rounded text-xs">Enter</kbd> to log
+                                </div>
+                                <button type='submit' class="cursor-pointer bg-[#00a63e] hover:bg-green-600 text-white font-semibold text-xs px-3 py-1.5 rounded-md shadow-sm font-mono">
+                                    > commit
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Horizontal line with filter toggle at the end -->
+                    <div class="flex items-center justify-between mb-6">
+                        <!-- Horizontal line -->
+                        <div class="flex-1 border-t border-gray-600"></div>
+                        
+                        <!-- Filter toggle at the end of the line -->
+                        <div class="ml-4 flex items-center bg-[#1a1f2b]/80 border border-gray-700/50 rounded-lg p-0.5 backdrop-blur-sm">
+                            <a href='?feed=network'
+                                class="px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-all duration-200 {% if request.GET.feed == 'network' or request.GET.feed == '' or request.GET.feed == None %}bg-gray-700 text-white{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-800/50{% endif %}">
+                                My Network
+                            </a>
+                            <a href='?feed=local'
+                                class="px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-all duration-200 {% if request.GET.feed == 'local' %}bg-gray-700 text-white{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-800/50{% endif %}">
+                                Local
+                            </a>
+                            <a href='?feed=global'
+                                class="px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-all duration-200 {% if request.GET.feed == 'global' %}bg-gray-700 text-white{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-800/50{% endif %}">
+                                Global
+                            </a>
                         </div>
                     </div>
-                </form>
 
-                <!-- Horizontal line with filter toggle at the end -->
-                <div class="flex items-center justify-between mb-6">
-                    <!-- Horizontal line -->
-                    <div class="flex-1 border-t border-gray-600"></div>
-                    
-                    <!-- Filter toggle at the end of the line -->
-                    <div class="ml-4 flex items-center bg-[#1a1f2b]/80 border border-gray-700/50 rounded-lg p-0.5 backdrop-blur-sm">
-                        <a href='?feed=network'
-                            class="px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-all duration-200 {% if request.GET.feed == 'network' or request.GET.feed == '' or request.GET.feed == None %}bg-gray-700 text-white{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-800/50{% endif %}">
-                            My Network
-                        </a>
-                        <a href='?feed=local'
-                            class="px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-all duration-200 {% if request.GET.feed == 'local' %}bg-gray-700 text-white{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-800/50{% endif %}">
-                            Local
-                        </a>
-                        <a href='?feed=global'
-                            class="px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-all duration-200 {% if request.GET.feed == 'global' %}bg-gray-700 text-white{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-800/50{% endif %}">
-                            Global
-                        </a>
+                    <!-- What's Hot Now Section (Mobile Only) -->
+                    <div class="block lg:hidden">
+                        {% include 'includes/trending_logs.html' %}
                     </div>
+
+                    {% if feed_items %}
+                        <div class="flex flex-col gap-y-6" id="feed-container">
+                            {% include "myapp/feed_items.html" %}
+                        </div>
+                        <div id="loading" class="text-center my-4 hidden">
+                            <span class="text-gray-500">Loading...</span>
+                        </div>
+                    {% else %}
+                        <div class='mt-4 flex flex-col gap-y-6 items-center mx-auto'>
+                            <img src='{% static "assets/no_feed.svg" %}' class='h-60 w-60'>
+                            <p class=''>No items in your feed yet!</p>
+                        </div>
+                    {% endif %}
                 </div>
+            </div>
 
-                <!-- What's Hot Now Section -->
-                {% include 'includes/trending_logs.html' %}
+            <!-- Right Sidebar (Desktop Only) -->
+            <div class="hidden lg:block w-80 flex-shrink-0">
+                <div class=" top-6">
+                    {% include 'includes/trending_logs.html' %}
+                </div>
+            </div>
 
-                {% if feed_items %}
-                    <div class="flex flex-col gap-y-6" id="feed-container">
-                        {% include "myapp/feed_items.html" %}
-                    </div>
-                    <div id="loading" class="text-center my-4 hidden">
-                        <span class="text-gray-500">Loading...</span>
-                    </div>
-                {% else %}
-                    <div class='mt-4 flex flex-col gap-y-6 items-center mx-auto'>
-                        <img src='{% static "assets/no_feed.svg" %}' class='h-60 w-60'>
-                        <p class=''>No items in your feed yet!</p>
-                    </div>
-                {% endif %}
+        </div>
             </div>
         </div>
 
