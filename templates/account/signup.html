@@ -43,20 +43,54 @@
                 <form method="POST" class="space-y-4">
                     {% csrf_token %}
                     
-                    {% for field in form %}
-                        <div>
-                            <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-white mb-1.5">
-                                {{ field.label }}
-                            </label>
-
-                            {{ field|add_class:"block w-full px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-md text-white text-sm focus:ring-1 focus:ring-[#58a6ff] focus:border-[#58a6ff] focus:outline-none transition-colors" }}
-
-                            {% if field.errors %}
-                                {% for error in field.errors %}
-                                    <p class="mt-1 text-xs text-[#f85149]">{{ error }}</p>
-                                {% endfor %}
+                    <!-- First Name and Last Name in Row -->
+                    <div class="flex flex-row gap-2">
+                        {% for field in form %}
+                            {% if field.name == 'first_name' %}
+                                <div class="flex-1">
+                                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-white mb-1.5">
+                                        {{ field.label }}
+                                    </label>
+                                    {{ field|add_class:"block w-full px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-md text-white text-sm focus:ring-1 focus:ring-green-700 focus:border-green-700 focus:outline-none transition-colors"|attr:"placeholder:First name" }}
+                                    {% if field.errors %}
+                                        {% for error in field.errors %}
+                                            <p class="mt-1 text-xs text-[#f85149]">{{ error }}</p>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            {% elif field.name == 'last_name' %}
+                                <div class="flex-1">
+                                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-white mb-1.5">
+                                        {{ field.label }}
+                                    </label>
+                                    {{ field|add_class:"block w-full px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-md text-white text-sm focus:ring-1 focus:ring-green-700 focus:border-green-700 focus:outline-none transition-colors"|attr:"placeholder:Last name" }}
+                                    {% if field.errors %}
+                                        {% for error in field.errors %}
+                                            <p class="mt-1 text-xs text-[#f85149]">{{ error }}</p>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
                             {% endif %}
-                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Other Fields -->
+                    {% for field in form %}
+                        {% if field.name != 'first_name' and field.name != 'last_name' %}
+                            <div>
+                                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-white mb-1.5">
+                                    {{ field.label }}
+                                </label>
+
+                                {{ field|add_class:"block w-full px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-md text-white text-sm focus:ring-1 focus:ring-green-700 focus:border-green-700 focus:outline-none transition-colors" }}
+
+                                {% if field.errors %}
+                                    {% for error in field.errors %}
+                                        <p class="mt-1 text-xs text-[#f85149]">{{ error }}</p>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        {% endif %}
                     {% endfor %}
 
                     {% if form.non_field_errors %}

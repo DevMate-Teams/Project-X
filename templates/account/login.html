@@ -33,7 +33,7 @@
                     <div>
                         <label for="{{ form.login.id_for_label }}" class="block text-sm font-medium text-[#c9d1d9] mb-1.5">Email address</label>
                         <input type="text" name="{{ form.login.name }}" id="{{ form.login.id_for_label }}" 
-                               class="block w-full px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-md text-white text-sm focus:ring-1 focus:ring-[#58a6ff] focus:border-[#58a6ff] focus:outline-none transition-colors" 
+                               class="block w-full px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-md text-white text-sm focus:ring-1 focus:ring-green-700 focus:border-green-700 focus:outline-none transition-colors" 
                                required />
                         {% if form.login.errors %}
                             <p class="mt-1 text-xs text-[#f85149]">{{ form.login.errors.0 }}</p>
@@ -47,7 +47,7 @@
                             <a href="{% url 'account_reset_password' %}" class="text-xs text-green-600 hover:text-green-700 hover:underline">Forgot password?</a>
                         </div>
                         <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" 
-                               class="block w-full px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-md text-white text-sm focus:ring-1 focus:ring-[#58a6ff] focus:border-[#58a6ff] focus:outline-none transition-colors" 
+                               class="block w-full px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-md text-white text-sm focus:ring-1 focus:ring-green-700 focus:border-green-700 focus:outline-none transition-colors" 
                                required />
                         {% if form.password.errors %}
                             <p class="mt-1 text-xs text-[#f85149]">{{ form.password.errors.0 }}</p>
