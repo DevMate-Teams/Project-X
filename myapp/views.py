@@ -642,6 +642,17 @@ def settings_page(request):
 
 
 @login_required
+def engagement_analytics_page(request):
+    """
+    Standalone page for viewing engagement analytics charts
+    """
+    context = {
+        'active_engagement': True,
+    }
+    return render(request, 'myapp/engagement_analytics.html', context)
+
+
+@login_required
 @login_required
 def delete_data(request):
     if request.method == "POST":

@@ -255,3 +255,83 @@ def delete_comment(request, comment_id):
     
     comment.delete()
     return JsonResponse({'success': True, 'deleted_count': total_deleted})
+
+
+@login_required
+def engagement_analytics_api(request, username):
+    """
+    API endpoint for fetching engagement analytics data for a user's logs.
+    
+    Query Parameters:
+        - start_date: YYYY-MM-DD format (defaults to 30 days ago)
+        - end_date: YYYY-MM-DD format (defaults to today)
+        - granularity: 'day', 'week', or 'month' (defaults to 'day')
+        - include_breakdown: 'true' to include reaction/comment breakdown
+        - include_comparison: 'true' to include period-over-period comparison
+    
+    Returns:
+        JSON response with engagement data formatted for Chart.js
+    """
+    from .utils.engagement import (
+        get_engagement_over_time,
+        get_engagement_breakdown,
+        get_engagement_comparison
+    )
+    from datetime import datetime
+    
+    # Get the target user
+    user = get_object_or_404(User, username=username)
+    user_info = user.info
+    
+    # Parse query parameters
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+    granularity = request.GET.get('granularity', 'day')
+    include_breakdown = request.GET.get('include_breakdown', 'false').lower() == 'true'
+    include_comparison = request.GET.get('include_comparison', 'false').lower() == 'true'
+    
+    # Validate granularity
+    if granularity not in ['day', 'week', 'month']:
+        granularity = 'day'
+    
+    # Parse dates
+    try:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date() if start_date_str else None
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date() if end_date_str else None
+    except (ValueError, TypeError):
+        start_date = None
+        end_date = None
+    
+    # Get main engagement data
+    engagement_data = get_engagement_over_time(
+        user_info=user_info,
+        start_date=start_date,
+        end_date=end_date,
+        granularity=granularity
+    )
+    
+    response_data = {
+        'success': True,
+        'data': engagement_data,
+        'username': username,
+        'granularity': granularity
+    }
+    
+    # Include optional breakdown data
+    if include_breakdown:
+        breakdown = get_engagement_breakdown(
+            user_info=user_info,
+            start_date=start_date,
+            end_date=end_date
+        )
+        response_data['breakdown'] = breakdown
+    
+    # Include optional comparison data
+    if include_comparison:
+        comparison = get_engagement_comparison(
+            user_info=user_info,
+            period='week' if granularity == 'day' else 'month'
+        )
+        response_data['comparison'] = comparison
+    
+    return JsonResponse(response_data)

@@ -27,6 +27,7 @@ urlpatterns = [
 
     path('update-banner/', views.update_banner, name='update_banner'),
     path("settings/", views.settings_page, name="settings_page"),
+    path("engagement-analytics/", views.engagement_analytics_page, name="engagement_analytics"),
     path('delete-data/', views.delete_data, name = 'delete_data'),
     
     path("delete_account/<uuid:uuid>/", views.delete_account, name="delete_acount"),

@@ -1,0 +1,168 @@
+{% comment %}
+Engagement Analytics Chart Component
+Usage: {% include 'logs/partials/engagement_chart.html' with username=userinfo_obj.user.username %}
+{% endcomment %}
+
+<section id="engagement-analytics-section" 
+         class="w-full bg-[#0d1117] border border-[#30363d] rounded-xl p-4 sm:p-6"
+         data-username="{{ username }}">
+    
+    <!-- Header & Main Controls -->
+    <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-6">
+        
+        <!-- Title -->
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-[#1f6feb]/10 rounded-lg border border-[#1f6feb]/20">
+                <i class="fa-solid fa-chart-line text-[#58a6ff]"></i>
+            </div>
+            <div>
+                <p class="text-white text-lg font-semibold">Engagement Overview</p>
+                <p class="text-[#8b949e] text-xs">Analyze your activity trends</p>
+            </div>
+        </div>
+        
+        <!-- Primary Controls Toolbar (High Priority) -->
+        <div class="flex flex-col sm:flex-row gap-3">
+            
+            <!-- Date Range Segmented Control -->
+            <div class="inline-flex rounded-md shadow-sm w-full sm:w-auto" role="group">
+                <button type="button" class="date-range-btn flex-1 sm:flex-none px-4 py-1.5 text-xs font-medium bg-[#238636] text-white border border-[#238636] rounded-l-md hover:bg-[#2ea043] focus:z-10 focus:ring-2 focus:ring-[#2ea043]" data-range="7">7D</button>
+                <button type="button" class="date-range-btn flex-1 sm:flex-none px-4 py-1.5 text-xs font-medium bg-[#21262d] text-[#c9d1d9] border-t border-b border-r border-[#30363d] hover:bg-[#30363d] hover:text-white focus:z-10 focus:ring-2 focus:ring-[#58a6ff]" data-range="30">30D</button>
+                <button type="button" class="date-range-btn flex-1 sm:flex-none px-4 py-1.5 text-xs font-medium bg-[#21262d] text-[#c9d1d9] border-t border-b border-r border-[#30363d] hover:bg-[#30363d] hover:text-white focus:z-10 focus:ring-2 focus:ring-[#58a6ff]" data-range="90">90D</button>
+                <button type="button" class="date-range-btn flex-1 sm:flex-none px-4 py-1.5 text-xs font-medium bg-[#21262d] text-[#c9d1d9] border-t border-b border-r border-[#30363d] rounded-r-md hover:bg-[#30363d] hover:text-white focus:z-10 focus:ring-2 focus:ring-[#58a6ff]" data-range="365">1Y</button>
+            </div>
+
+            <!-- Granularity -->
+            <div class="relative w-full sm:w-auto">
+                <select id="engagement-granularity" class="appearance-none w-full sm:w-auto bg-[#21262d] text-[#c9d1d9] text-xs px-3 py-1.5 pr-8 rounded-md border border-[#30363d] hover:border-[#8b949e] focus:outline-none focus:border-[#58a6ff] focus:ring-1 focus:ring-[#58a6ff] transition-colors cursor-pointer">
+                    <option value="day">Daily</option>
+                    <option value="week">Weekly</option>
+                    <option value="month">Monthly</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#8b949e]">
+                    <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Secondary Controls: Custom Date Range (Lower Priority) -->
+    <div class="mb-8 flex flex-wrap items-center gap-3 px-1">
+        <div class="flex items-center gap-2 text-[#8b949e]">
+            <i class="fa-solid fa-filter text-xs"></i>
+            <span class="text-xs font-medium">Custom Filter:</span>
+        </div>
+        
+        <div class="flex items-center gap-2 bg-[#161b22] border border-[#30363d] rounded-md px-2 py-1 transition-colors hover:border-[#8b949e] group">
+            <span class="text-[#8b949e] text-[10px] uppercase tracking-wider group-hover:text-[#c9d1d9]">From</span>
+            <input type="date" id="engagement-start-date" class="bg-transparent text-[#c9d1d9] text-xs focus:outline-none p-0 border-none w-[110px]" title="Start Date">
+        </div>
+        
+        <span class="text-[#8b949e] text-xs">to</span>
+        
+        <div class="flex items-center gap-2 bg-[#161b22] border border-[#30363d] rounded-md px-2 py-1 transition-colors hover:border-[#8b949e] group">
+            <span class="text-[#8b949e] text-[10px] uppercase tracking-wider group-hover:text-[#c9d1d9]">To</span>
+            <input type="date" id="engagement-end-date" class="bg-transparent text-[#c9d1d9] text-xs focus:outline-none p-0 border-none w-[110px]" title="End Date">
+        </div>
+
+        <button type="button" id="apply-custom-range" class="px-3 py-1 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] hover:text-white text-xs font-medium rounded-md border border-[#30363d] transition-colors shadow-sm">
+            Apply
+        </button>
+    </div>
+    
+    <!-- Summary Stats Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Total Logs -->
+        <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col justify-between hover:border-[#58a6ff] transition-colors group">
+            <div class="flex items-start justify-between mb-2">
+                <p class="text-[#8b949e] text-xs group-hover:text-[#58a6ff] transition-colors">Total Logs</p>
+                <div class="p-1.5 bg-[#58a6ff]/10 rounded-md">
+                    <i class="fa-regular fa-file-lines text-[#58a6ff] text-xs"></i>
+                </div>
+            </div>
+            <p id="stat-total-logs" class="text-[#c9d1d9] text-2xl font-semibold">-</p>
+        </div>
+        
+        <!-- Reactions -->
+        <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col justify-between hover:border-[#d2a8ff] transition-colors group">
+            <div class="flex items-start justify-between mb-2">
+                <p class="text-[#8b949e] text-xs group-hover:text-[#d2a8ff] transition-colors">Reactions</p>
+                <div class="p-1.5 bg-[#d2a8ff]/10 rounded-md">
+                    <i class="fa-regular fa-heart text-[#d2a8ff] text-xs"></i>
+                </div>
+            </div>
+            <p id="stat-total-reactions" class="text-[#c9d1d9] text-2xl font-semibold">-</p>
+        </div>
+        
+        <!-- Comments -->
+        <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col justify-between hover:border-[#3fb950] transition-colors group">
+            <div class="flex items-start justify-between mb-2">
+                <p class="text-[#8b949e] text-xs group-hover:text-[#3fb950] transition-colors">Comments</p>
+                <div class="p-1.5 bg-[#3fb950]/10 rounded-md">
+                    <i class="fa-regular fa-comment text-[#3fb950] text-xs"></i>
+                </div>
+            </div>
+            <p id="stat-total-comments" class="text-[#c9d1d9] text-2xl font-semibold">-</p>
+        </div>
+        
+        <!-- Avg Engagement -->
+        <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col justify-between hover:border-[#8b949e] transition-colors group">
+            <div class="flex items-start justify-between mb-2">
+                <p class="text-[#8b949e] text-xs group-hover:text-[#c9d1d9] transition-colors">Avg. Engagement</p>
+                <div class="p-1.5 bg-[#8b949e]/10 rounded-md">
+                    <i class="fa-solid fa-chart-line text-[#8b949e] text-xs"></i>
+                </div>
+            </div>
+            <p id="stat-avg-engagement" class="text-[#c9d1d9] text-2xl font-semibold">-</p>
+        </div>
+    </div>
+    
+    <!-- Chart Container -->
+    <div class="relative bg-[#161b22] rounded-lg border border-[#30363d] p-4">
+        <!-- Chart Header (Tabs) -->
+        <div class="absolute top-4 right-4 z-10 flex bg-[#0d1117] rounded-md border border-[#30363d] p-0.5">
+            <button type="button" class="chart-type-btn px-2.5 py-1 text-[10px] font-medium rounded-[4px] transition-colors bg-[#21262d] text-[#c9d1d9] shadow-sm" data-type="line">Line</button>
+            <button type="button" class="chart-type-btn px-2.5 py-1 text-[10px] font-medium rounded-[4px] transition-colors text-[#8b949e] hover:text-[#c9d1d9]" data-type="bar">Bar</button>
+            <button type="button" class="chart-type-btn px-2.5 py-1 text-[10px] font-medium rounded-[4px] transition-colors text-[#8b949e] hover:text-[#c9d1d9]" data-type="stacked">Stack</button>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="chart-loading" class="absolute inset-0 bg-[#161b22]/90 flex items-center justify-center z-20 rounded-lg">
+            <div class="flex flex-col items-center gap-2">
+                <i class="fa-solid fa-circle-notch fa-spin text-[#58a6ff] text-2xl"></i>
+                <span class="text-[#8b949e] text-xs">Loading data...</span>
+            </div>
+        </div>
+        
+        <!-- Chart Canvas -->
+        <div class="h-[300px] sm:h-[350px] mt-8 sm:mt-0">
+            <canvas id="engagement-chart"></canvas>
+        </div>
+        
+        <!-- Empty State -->
+        <div id="chart-empty-state" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center bg-[#161b22] rounded-lg z-10">
+            <div class="w-12 h-12 rounded-full bg-[#21262d] border border-[#30363d] flex items-center justify-center mb-3">
+                <i class="fa-solid fa-chart-bar text-[#8b949e]"></i>
+            </div>
+            <p class="text-[#c9d1d9] text-sm font-medium">No data available</p>
+            <p class="text-[#8b949e] text-xs mt-1">Try adjusting the date range</p>
+        </div>
+    </div>
+    
+    <!-- Legend -->
+    <div class="flex flex-wrap justify-center gap-6 mt-6 border-t border-[#30363d] pt-4">
+        <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-sm bg-[#58a6ff]"></span>
+            <span class="text-[#8b949e] text-xs">Logs</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-sm bg-[#d2a8ff]"></span>
+            <span class="text-[#8b949e] text-xs">Reactions</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-sm bg-[#3fb950]"></span>
+            <span class="text-[#8b949e] text-xs">Comments</span>
+        </div>
+    </div>
+</section>

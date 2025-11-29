@@ -9,4 +9,7 @@ urlpatterns = [
     path("comment/delete/<int:comment_id>/", views.delete_comment, name="delete_comment"),
     
     path("load-more-profile-logs/<str:username>/", views.load_more_profile_logs, name="load_more_profile_logs"),
+    
+    # Engagement Analytics API
+    path("analytics/<str:username>/engagement/", views.engagement_analytics_api, name="engagement_analytics_api"),
 ]
