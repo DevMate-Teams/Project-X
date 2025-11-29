@@ -83,6 +83,8 @@
     --text-3xl--line-height: calc(2.25 / 1.875);
     --text-4xl: 2.25rem;
     --text-4xl--line-height: calc(2.5 / 2.25);
+    --text-5xl: 3rem;
+    --text-5xl--line-height: 1;
     --font-weight-thin: 100;
     --font-weight-light: 300;
     --font-weight-normal: 400;
@@ -480,6 +482,9 @@
   .my-4 {
     margin-block: calc(var(--spacing) * 4);
   }
+  .my-6 {
+    margin-block: calc(var(--spacing) * 6);
+  }
   .-mt-1 {
     margin-top: calc(var(--spacing) * -1);
   }
@@ -554,6 +559,9 @@
   }
   .mb-1 {
     margin-bottom: calc(var(--spacing) * 1);
+  }
+  .mb-1\.5 {
+    margin-bottom: calc(var(--spacing) * 1.5);
   }
   .mb-2 {
     margin-bottom: calc(var(--spacing) * 2);
@@ -894,6 +902,18 @@
   .max-w-\[140px\] {
     max-width: 140px;
   }
+  .max-w-\[350px\] {
+    max-width: 350px;
+  }
+  .max-w-\[450px\] {
+    max-width: 450px;
+  }
+  .max-w-\[500px\] {
+    max-width: 500px;
+  }
+  .max-w-\[550px\] {
+    max-width: 550px;
+  }
   .max-w-\[800px\] {
     max-width: 800px;
   }
@@ -1140,6 +1160,13 @@
       margin-inline-end: calc(calc(var(--spacing) * 3) * calc(1 - var(--tw-space-x-reverse)));
     }
   }
+  .space-x-4 {
+    :where(& > :not(:last-child)) {
+      --tw-space-x-reverse: 0;
+      margin-inline-start: calc(calc(var(--spacing) * 4) * var(--tw-space-x-reverse));
+      margin-inline-end: calc(calc(var(--spacing) * 4) * calc(1 - var(--tw-space-x-reverse)));
+    }
+  }
   .gap-y-1 {
     row-gap: calc(var(--spacing) * 1);
   }
@@ -1369,6 +1396,12 @@
   }
   .border-\[\#a8b3cf\] {
     border-color: #a8b3cf;
+  }
+  .border-\[\#da3633\]\/40 {
+    border-color: color-mix(in oklab, #da3633 40%, transparent);
+  }
+  .border-\[\#f85149\] {
+    border-color: #f85149;
   }
   .border-\[\#f85149\]\/40 {
     border-color: color-mix(in oklab, #f85149 40%, transparent);
@@ -1600,6 +1633,9 @@
   }
   .bg-\[\#ef4444\] {
     background-color: #ef4444;
+  }
+  .bg-\[\#f85149\]\/10 {
+    background-color: color-mix(in oklab, #f85149 10%, transparent);
   }
   .bg-amber-400 {
     background-color: var(--color-amber-400);
@@ -2045,6 +2081,10 @@
   .text-4xl {
     font-size: var(--text-4xl);
     line-height: var(--tw-leading, var(--text-4xl--line-height));
+  }
+  .text-5xl {
+    font-size: var(--text-5xl);
+    line-height: var(--tw-leading, var(--text-5xl--line-height));
   }
   .text-base {
     font-size: var(--text-base);
@@ -3130,6 +3170,13 @@
       }
     }
   }
+  .hover\:text-\[\#58a6ff\]\/80 {
+    &:hover {
+      @media (hover: hover) {
+        color: color-mix(in oklab, #58a6ff 80%, transparent);
+      }
+    }
+  }
   .hover\:text-\[\#c9d1d9\] {
     &:hover {
       @media (hover: hover) {
@@ -3190,6 +3237,13 @@
     &:hover {
       @media (hover: hover) {
         color: var(--color-green-600);
+      }
+    }
+  }
+  .hover\:text-green-700 {
+    &:hover {
+      @media (hover: hover) {
+        color: var(--color-green-700);
       }
     }
   }
@@ -3304,6 +3358,11 @@
       border-color: #238636;
     }
   }
+  .focus\:border-\[\#f85149\] {
+    &:focus {
+      border-color: #f85149;
+    }
+  }
   .focus\:border-blue-500 {
     &:focus {
       border-color: var(--color-blue-500);
@@ -3342,6 +3401,11 @@
       box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
     }
   }
+  .focus\:ring-\[\#2ea043\] {
+    &:focus {
+      --tw-ring-color: #2ea043;
+    }
+  }
   .focus\:ring-\[\#58a6ff\] {
     &:focus {
       --tw-ring-color: #58a6ff;
@@ -3350,6 +3414,11 @@
   .focus\:ring-\[\#238636\] {
     &:focus {
       --tw-ring-color: #238636;
+    }
+  }
+  .focus\:ring-\[\#f85149\] {
+    &:focus {
+      --tw-ring-color: #f85149;
     }
   }
   .focus\:ring-black {
@@ -3381,6 +3450,11 @@
     &:focus {
       --tw-ring-offset-width: 2px;
       --tw-ring-offset-shadow: var(--tw-ring-inset,) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+    }
+  }
+  .focus\:ring-offset-\[\#0d1117\] {
+    &:focus {
+      --tw-ring-offset-color: #0d1117;
     }
   }
   .focus\:ring-offset-black {
@@ -3444,6 +3518,11 @@
   .sm\:mx-0 {
     @media (width >= 40rem) {
       margin-inline: calc(var(--spacing) * 0);
+    }
+  }
+  .sm\:mx-auto {
+    @media (width >= 40rem) {
+      margin-inline: auto;
     }
   }
   .sm\:my-6 {
@@ -3539,6 +3618,11 @@
   .sm\:max-w-lg {
     @media (width >= 40rem) {
       max-width: var(--container-lg);
+    }
+  }
+  .sm\:max-w-md {
+    @media (width >= 40rem) {
+      max-width: var(--container-md);
     }
   }
   .sm\:max-w-none {

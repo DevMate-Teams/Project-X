@@ -243,6 +243,8 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'  #Use email for authentication
 ACCOUNT_USERNAME_REQUIRED = True  # Default is True, so this is optional
 ACCOUNT_USERNAME_MIN_LENGTH = 3
 
+SOCIALACCOUNT_LOGIN_ON_GET = True 
+
 SOCIALACCOUNT_PROVIDERS = {
     "google":{
          "SCOPE":[

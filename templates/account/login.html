@@ -3,51 +3,105 @@
 {% load socialaccount %}
 
 {% block title %}
-    Login
+    Login · DevMate
 {% endblock %}
 
 {% block content %}
-<div class="flex justify-center items-center min-h-screen bg-black">
-    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md m-8">
-        <p class="text-3xl font-bold text-center text-black mb-6">DevMate</p>
+<div class="min-h-screen bg-[#0d1117] flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 font-sans text-[#c9d1d9]">
+    
+    <!-- Logo Header -->
+    <div class="sm:mx-auto sm:w-full sm:max-w-md mb-6 text-center">
+        <h2 class="text-3xl font-light tracking-tight text-white">DevMate</h2>
+    </div>
 
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-4">
-                <label for="{{ form.login.id_for_label }}" class="block text-sm font-medium mb-1 text-black">Email</label>
-                <input type="text" name="{{ form.login.name }}" id="{{ form.login.id_for_label }}" class="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-black" required/>
-                {% if form.login.errors %}
-                    <div class="text-red-500 text-sm mt-1">{{ form.login.errors }}</div>
+    <!-- Main Login Card -->
+    <div class="w-full max-w-[350px]">
+        <div class="bg-[#161b22] border border-[#30363d] rounded-xl shadow-sm overflow-hidden">
+            <div class="px-8 py-6">
+                
+                <!-- Error Messages (Non-field) -->
+                {% if form.non_field_errors %}
+                <div class="mb-4 p-3 rounded-md bg-[#da3633]/10 border border-[#da3633]/40 text-[#f85149] text-sm text-center">
+                    {{ form.non_field_errors.0 }}
+                </div>
                 {% endif %}
-            </div>
-            <div class="mb-6">
-                <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium mb-1 text-black">Password</label>
-                <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" class="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-black" required/>
-                {% if form.password.errors %}
-                    <div class="text-red-500 text-sm mt-1">{{ form.password.errors }}</div>
-                {% endif %}
-            </div>
 
-            {% if form.non_field_errors %}
-                <p class="text-red-500 text-sm mb-4 text-center">Invalid Credentials!</p>
-            {% endif %}
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <!-- Email Field -->
+                    <div>
+                        <label for="{{ form.login.id_for_label }}" class="block text-sm font-medium text-[#c9d1d9] mb-1.5">Email address</label>
+                        <input type="text" name="{{ form.login.name }}" id="{{ form.login.id_for_label }}" 
+                               class="block w-full px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-md text-white text-sm focus:ring-1 focus:ring-[#58a6ff] focus:border-[#58a6ff] focus:outline-none transition-colors" 
+                               required />
+                        {% if form.login.errors %}
+                            <p class="mt-1 text-xs text-[#f85149]">{{ form.login.errors.0 }}</p>
+                        {% endif %}
+                    </div>
 
-            <button type="submit" class="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 hover:cursor-pointer focus:ring-black">
-                Login
-            </button>
+                    <!-- Password Field -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-[#c9d1d9]">Password</label>
+                            <a href="{% url 'account_reset_password' %}" class="text-xs text-green-600 hover:text-green-700 hover:underline">Forgot password?</a>
+                        </div>
+                        <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" 
+                               class="block w-full px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-md text-white text-sm focus:ring-1 focus:ring-[#58a6ff] focus:border-[#58a6ff] focus:outline-none transition-colors" 
+                               required />
+                        {% if form.password.errors %}
+                            <p class="mt-1 text-xs text-[#f85149]">{{ form.password.errors.0 }}</p>
+                        {% endif %}
+                </div>
 
-            <div class="flex flex-row justify-between items-center mb-4 mt-4">
-                <a href="{% url 'account_reset_password' %}" class="underline">Forgot Password?</a>
-                <p>No account? <a href="{% url 'account_signup' %}" class="underline">Sign up</a></p>
+                    <!-- Submit Button -->
+                    <button type="submit" class="w-full flex justify-center py-1.5 px-4 border border-[rgba(240,246,252,0.1)] rounded-md shadow-sm text-sm font-bold text-white bg-[#238636] hover:bg-[#2ea043] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2ea043] focus:ring-offset-[#0d1117] transition-all">
+                        Sign in
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="relative my-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-[#30363d]"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-[#161b22] text-[#8b949e] text-xs font-medium uppercase">OR</span>
+                    </div>
+                </div>
+
+                <!-- Social Login -->
+                <div class="mt-4">
+                    <a href="{% provider_login_url 'google' %}" class="w-full flex items-center justify-center gap-2 px-4 py-1.5 border border-[#30363d] rounded-md shadow-sm bg-[#21262d] text-sm font-medium text-[#c9d1d9] hover:bg-[#30363d] hover:border-[#8b949e] transition-all">
+                        <img class="h-4 w-4" src="{% static 'assets/google_icon.png' %}" alt="Google">
+                        <span>Log in with Google</span>
+                    </a>
+                </div>
+
             </div>
+        </div>
 
-            <div class="flex flex-col items-center mt-5">
-                <a href="{% provider_login_url 'google' %}" class="flex flex-col items-center text-center">
-                    <p class="text-gray-600 mb-2">Log In with Google</p>
-                    <img class="h-8 w-8" src="{% static 'assets/google_icon.png' %}" alt="Google Icon">
-                </a>
-            </div>
-        </form>
+        <!-- Sign Up Card -->
+        <div class="mt-4 bg-[#161b22] border border-[#30363d] rounded-xl py-4 px-6 text-center shadow-sm">
+            <p class="text-sm text-[#c9d1d9]">
+                New to DevMate? 
+                <a href="{% url 'account_signup' %}" class="font-medium text-green-600 hover:text-green-700 hover:underline ml-1">Create an account</a>
+            </p>
+        </div>
+
+        <!-- Footer Links -->
+        <div class="mt-8 flex justify-center gap-6 text-[#8b949e]">
+            <a href="#" class="hover:text-[#c9d1d9] transition-colors" aria-label="Instagram">
+                <i class="fa-brands fa-instagram text-xl"></i>
+            </a>
+            <a href="#" class="hover:text-[#c9d1d9] transition-colors" aria-label="LinkedIn">
+                <i class="fa-brands fa-linkedin text-xl"></i>
+            </a>
+            <a href="#" class="hover:text-[#c9d1d9] transition-colors" aria-label="Contact">
+                <i class="fa-regular fa-envelope text-xl"></i>
+            </a>
+        </div>
+
     </div>
 </div>
 {% endblock %}
