@@ -78,6 +78,7 @@
                         <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#fd8c73]"></div>
                     {% endif %}
                 </a>
+                {% if not is_self %}
                 <a href="?list=mutuals" class="flex-1 py-3 text-center text-sm font-medium transition-colors relative group
                     {% if request.GET.list == 'mutuals' %}
                         text-white bg-[#21262d]/50
@@ -90,6 +91,7 @@
                         <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#fd8c73]"></div>
                     {% endif %}
                 </a>
+                {% endif %}
             </div>
 
             <!-- List Content -->
@@ -129,15 +131,13 @@
                                 <!-- Self -->
                             {% else %}
                                 {% if user.info|is_following:people %}
-                                    <button class="follow-btn px-4 py-1.5 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] border border-[#30363d] rounded-lg text-xs font-medium transition-all w-[90px] group-hover:border-[#8b949e]" 
-                                            data-user-id="{{ people.id }}">
-                                        Following
-                                    </button>
+                                    <a href="javascript:void(0);" class="follow-btn bg-[#262b34] text-white py-2 text-center rounded-md inline-block min-w-[100px]" data-user-id="{{ people.id }}">
+                                        <span class="btn-text">&lt;Unfollow/&gt;</span>
+                                    </a>
                                 {% else %}
-                                    <button class="follow-btn px-4 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white border border-[rgba(240,246,252,0.1)] rounded-lg text-xs font-medium transition-all w-[90px] shadow-sm" 
-                                            data-user-id="{{ people.id }}">
-                                        Follow
-                                    </button>
+                                    <a href="javascript:void(0);" class="follow-btn bg-[#6feb85] text-black text-center py-2 rounded-md inline-block min-w-[100px]" data-user-id="{{ people.id }}">
+                                        <span class="btn-text">&lt;Follow/&gt;</span>
+                                    </a>
                                 {% endif %}
                             {% endif %}
                         </div>

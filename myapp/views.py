@@ -430,15 +430,21 @@ def follow_list(request, username):
         
         # Pre-calculate following IDs for mutuals check (lazy queryset)
         # Using 'id' (userinfo PK) is cleaner than 'user__id'
-        my_following_ids = request.user.info.get_following().values_list('id', flat=True)
+        is_self = request.user == userinfo_obj.user
+        my_following_ids = []
+        if not is_self:
+            my_following_ids = request.user.info.get_following().values_list('id', flat=True)
 
         if l == 'followers':
             list = userinfo_obj.get_followers()
         elif l == 'following':   
             list = userinfo_obj.get_following()
         elif l == 'mutuals':
-            # Get users that userinfo_obj follows AND are in my_following_ids
-            list = userinfo_obj.get_following().filter(id__in=my_following_ids)
+            if is_self:
+                list = userinfo.objects.none()
+            else:
+                # Get users that userinfo_obj follows AND are in my_following_ids
+                list = userinfo_obj.get_following().filter(id__in=my_following_ids)
         else:
             # Invalid list type, default to followers
             return HttpResponseRedirect(f'{request.path}?list=followers')
@@ -451,7 +457,11 @@ def follow_list(request, username):
         # Calculate counts for context
         followers_count = userinfo_obj.get_followers().count()
         following_count = userinfo_obj.get_following().count()
-        mutuals_count = userinfo_obj.get_following().filter(id__in=my_following_ids).count()
+        
+        if is_self:
+            mutuals_count = 0
+        else:
+            mutuals_count = userinfo_obj.get_following().filter(id__in=my_following_ids).count()
 
         context = {
             'userinfo_obj': userinfo_obj,
@@ -461,6 +471,7 @@ def follow_list(request, username):
             'followers_count': followers_count,
             'following_count': following_count,
             'mutuals_count': mutuals_count,
+            'is_self': is_self,
         }
         
         return render(request, 'myapp/followList.html', context)
