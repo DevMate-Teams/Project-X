@@ -302,6 +302,18 @@ def user_profile(request, user_name):
     print(section)
     
     is_following = request.user.info.is_following(userinfo_obj)
+    
+    # Calculate mutual count efficiently (only for authenticated users viewing other profiles)
+    if request.user.is_authenticated and request.user != userinfo_obj.user:
+        my_following_ids = request.user.info.get_following().values_list('id', flat=True)
+        mutuals_queryset = userinfo_obj.get_following().filter(id__in=my_following_ids)
+        mutuals_count = mutuals_queryset.count()
+        # Fetch first 3 mutual connections for preview display (Instagram/LinkedIn style)
+        mutuals_preview = list(mutuals_queryset[:3])
+    else:
+        mutuals_count = 0
+        mutuals_preview = []
+    
     if request.user.info == userinfo_obj: #Edit options
         edu_form = EditEducationForm(instance=request.user.info.education)
         exp_form = EditExperienceForm()
@@ -378,6 +390,8 @@ def user_profile(request, user_name):
         'exp_obj': exp_obj,
         'section': section,
         'is_following': is_following,
+        'mutuals_count': mutuals_count,
+        'mutuals_preview': mutuals_preview,
         'ep_form': editprofile_form,
         'edu_form': edu_form,
         'exp_form': exp_form,

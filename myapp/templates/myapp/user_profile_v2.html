@@ -128,7 +128,7 @@
                 </div>
 
                  <!-- Followers / Following Stats -->
-                <div class="flex gap-6 text-sm text-white font-medium border-t mt-2 border-[#2a2f3b] pt-4">
+                <div class="flex gap-6 text-sm text-white font-medium border-t mt-3 border-[#1c1f25] pt-4">
                     <a href= "{% url 'follow_list' userinfo_obj.user.username %}" class="flex items-center gap-1 cursor-pointer">
                         <span class="text-base font-bold text-[#f4f4f5] followers-count">{{userinfo_obj.get_followers.count}}</span>
                         <span class="text-gray-400 hover:underline">Followers</span>
@@ -139,8 +139,47 @@
                     </a>
                 </div>
 
+                <!-- Mutual Connections Section (Instagram/LinkedIn Style) -->
+                {% if mutuals_count > 0 %}
+                <div class="mt-4 pb-4 border-b border-[#1c1f25]">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-sm text-gray-400">
+                            You both Follow
+                            {% if mutuals_preview %}
+                                {% for mutual in mutuals_preview %}
+                                    <a href="{% url 'user_profile' mutual.user.username %}" class="text-white hover:underline font-medium">{{ mutual.user.username }}</a>{% if not forloop.last %}{% if forloop.revcounter == 2 %} and {% else %}, {% endif %}{% endif %}
+                                {% endfor %}
+                                {% if mutuals_count > 3 %}
+                                    + <a href="{% url 'follow_list' userinfo_obj.user.username %}?list=mutuals" class="hover:underline">{{ mutuals_count|add:"-3" }} other{{ mutuals_count|add:"-3"|pluralize }}</a>
+                                {% endif %}
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <!-- Mutual Avatars Preview -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex -space-x-2">
+                            {% for mutual in mutuals_preview %}
+                            <a href="{% url 'user_profile' mutual.user.username %}" class="relative group">
+                                <img src="{{ mutual.profile_image.url }}?v={{ mutual.updated_at.timestamp }}" 
+                                     alt="{{ mutual.user.username }}" 
+                                     class="w-10 h-10 rounded-full border-2 border-[#1a1f2b] object-cover transition-transform group-hover:scale-110 group-hover:z-10"
+                                     title="{{ mutual.user.username }}">
+                            </a>
+                            {% endfor %}
+                        </div>
+                        
+                        <a href="{% url 'follow_list' userinfo_obj.user.username %}?list=mutuals" 
+                           class="text-xs text-green-600 hover:text-green-700 font-semibold transition-colors flex items-center gap-1">
+                            View all {{ mutuals_count }} mutual{{ mutuals_count|pluralize }}
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- Coding Style with Inline Edit -->
-                <div class="flex items-center gap-3 mt-1">
+                <div class="flex items-center gap-3 mt-3">
                     {% if userinfo_obj.coding_style.logo %}
                     <div id="coding-style-badge" class="text-sm px-3 py-2 w-fit rounded-lg bg-[#262b34] text-white shadow-sm border border-[#333] flex items-center gap-2">
                         <img src="{% static 'assets/coding-style-logo/' %}{{userinfo_obj.coding_style.logo}}" alt="{{userinfo_obj.coding_style.name}}" class="w-5 h-5">

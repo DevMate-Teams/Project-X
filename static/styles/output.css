@@ -495,6 +495,12 @@
   .-mt-2 {
     margin-top: calc(var(--spacing) * -2);
   }
+  .-mt-3 {
+    margin-top: calc(var(--spacing) * -3);
+  }
+  .-mt-4 {
+    margin-top: calc(var(--spacing) * -4);
+  }
   .-mt-6 {
     margin-top: calc(var(--spacing) * -6);
   }
@@ -1162,6 +1168,13 @@
   .gap-x-5 {
     column-gap: calc(var(--spacing) * 5);
   }
+  .-space-x-2 {
+    :where(& > :not(:last-child)) {
+      --tw-space-x-reverse: 0;
+      margin-inline-start: calc(calc(var(--spacing) * -2) * var(--tw-space-x-reverse));
+      margin-inline-end: calc(calc(var(--spacing) * -2) * calc(1 - var(--tw-space-x-reverse)));
+    }
+  }
   .space-x-3 {
     :where(& > :not(:last-child)) {
       --tw-space-x-reverse: 0;
@@ -1334,11 +1347,20 @@
   .border-\[\#1a1f2b\] {
     border-color: #1a1f2b;
   }
+  .border-\[\#1b1e25\] {
+    border-color: #1b1e25;
+  }
+  .border-\[\#1c1f25\] {
+    border-color: #1c1f25;
+  }
   .border-\[\#1f1f1f\] {
     border-color: #1f1f1f;
   }
   .border-\[\#1f6feb\]\/30 {
     border-color: color-mix(in oklab, #1f6feb 30%, transparent);
+  }
+  .border-\[\#1f232b\] {
+    border-color: #1f232b;
   }
   .border-\[\#2a2f3b\] {
     border-color: #2a2f3b;
@@ -2598,6 +2620,13 @@
     --tw-outline-style: none;
     outline-style: none;
   }
+  .group-hover\:z-10 {
+    &:is(:where(.group):hover *) {
+      @media (hover: hover) {
+        z-index: 10;
+      }
+    }
+  }
   .group-hover\:w-full {
     &:is(:where(.group):hover *) {
       @media (hover: hover) {
@@ -2611,6 +2640,16 @@
         --tw-scale-x: 105%;
         --tw-scale-y: 105%;
         --tw-scale-z: 105%;
+        scale: var(--tw-scale-x) var(--tw-scale-y);
+      }
+    }
+  }
+  .group-hover\:scale-110 {
+    &:is(:where(.group):hover *) {
+      @media (hover: hover) {
+        --tw-scale-x: 110%;
+        --tw-scale-y: 110%;
+        --tw-scale-z: 110%;
         scale: var(--tw-scale-x) var(--tw-scale-y);
       }
     }
@@ -3114,6 +3153,13 @@
     &:hover {
       @media (hover: hover) {
         color: #58a6ff;
+      }
+    }
+  }
+  .hover\:text-\[\#79c0ff\] {
+    &:hover {
+      @media (hover: hover) {
+        color: #79c0ff;
       }
     }
   }
