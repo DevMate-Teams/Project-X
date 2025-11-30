@@ -18,16 +18,24 @@
         <div class="flex-1 py-8 px-4 sm:px-6 lg:px-8">
 
             <!-- Page Header -->
-            <div class="max-w-4xl mx-auto mb-8">
-                <h1 class="text-2xl font-semibold text-white mb-2">Email Addresses</h1>
-                <p class="text-sm text-[#8b949e]">Manage your email addresses for account access and recovery</p>
+            <div class="max-w-3xl mx-auto mb-8 flex items-start sm:items-center justify-between gap-4">
+                <div>
+                    <p class="text-2xl font-semibold text-white mb-2">Emails</p>
+                    <p class="text-sm text-[#8b949e]">Manage email addresses associated with your account.</p>
+                </div>
+                <a href="{% url 'settings_page' %}" 
+                   class="inline-flex items-center gap-2 px-3 py-1.5 bg-[#161b22] text-gray-300 hover:text-white border border-[#30363d] hover:border-[#8b949e] rounded-lg transition-colors text-sm">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span class="hidden sm:inline">Back to Account Settings</span>
+                    <span class="sm:hidden">Settings</span>
+                </a>
             </div>
 
             <!-- Messages -->
             {% if messages %}
-                <div class="max-w-4xl mx-auto mb-6 space-y-2">
+                <div class="max-w-3xl mx-auto mb-6 space-y-2">
                     {% for message in messages %}
-                        <div class="p-4 rounded-lg text-sm {% if message.tags == 'success' %}bg-[#238636]/10 border border-[#238636]/30 text-[#3fb950]{% else %}bg-[#da3633]/10 border border-[#da3633]/30 text-[#f85149]{% endif %} backdrop-blur-sm">
+                        <div class="p-4 rounded-md text-sm {% if message.tags == 'success' %}bg-[rgba(46,160,67,0.15)] border border-[rgba(46,160,67,0.4)] text-[#3fb950]{% else %}bg-[rgba(248,81,73,0.15)] border border-[rgba(248,81,73,0.4)] text-[#f85149]{% endif %}">
                             <div class="flex items-center gap-2">
                                 <i class="{% if message.tags == 'success' %}fa-solid fa-check-circle{% else %}fa-solid fa-exclamation-circle{% endif %}"></i>
                                 <span>{{ message }}</span>
@@ -38,146 +46,106 @@
             {% endif %}
 
             <!-- Main Content -->
-            <div class="max-w-4xl mx-auto space-y-6">
+            <div class="max-w-3xl mx-auto space-y-6">
                 
                 <!-- Email List Section -->
-                <div class="bg-[#161b22] border border-[#30363d] rounded-2xl overflow-hidden">
-                    <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-[#30363d]">
-                        <h2 class="text-sm sm:text-base font-semibold text-white">Your Email Addresses</h2>
+                <div class="bg-[#0d1117] border border-[#30363d] rounded-md overflow-hidden">
+                    <div class="px-4 py-3 border-b border-[#30363d] bg-[#161b22]">
+                        <p class="text-sm font-semibold text-[#c9d1d9]">Email addresses</p>
                     </div>
                     
                     <div class="divide-y divide-[#30363d]">
                         {% for emailaddress in user.emailaddress_set.all %}
-                            <div class="px-4 sm:px-6 py-3 sm:py-4 hover:bg-[#0d1117]/50 transition-colors group">
-                                <div class="flex flex-col gap-3">
-                                    <!-- Email Info -->
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-start gap-2 sm:gap-3">
-                                            <div class="flex-shrink-0 mt-0.5">
-                                                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#21262d] border-gray-700 border flex items-center justify-center">
-                                                    <i class="fa-solid fa-envelope text-white text-xs sm:text-sm"></i>
-                                                </div>
-                                            </div>
-                                            <div class="flex-1 min-w-0">
-                                                <p class="text-[#c9d1d9] font-medium text-sm sm:text-base break-all mb-1.5 sm:mb-2">{{ emailaddress.email }}</p>
-                                                <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                                                    {% if emailaddress.verified %}
-                                                        <span class="inline-flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-[#238636]/15 text-[#3fb950] border border-[#238636]/30 rounded-full text-[10px] sm:text-xs font-medium">
-                                                            <i class="fa-solid fa-shield-check text-[8px] sm:text-xs"></i>
-                                                            <span class="hidden xs:inline">Verified</span>
-                                                            <span class="xs:hidden">✓</span>
-                                                        </span>
-                                                    {% else %}
-                                                        <span class="inline-flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-[#da3633]/15 text-[#f85149] border border-[#da3633]/30 rounded-full text-[10px] sm:text-xs font-medium">
-                                                            <i class="fa-solid fa-shield-exclamation text-[8px] sm:text-xs"></i>
-                                                            <span class="hidden xs:inline">Unverified</span>
-                                                            <span class="xs:hidden">!</span>
-                                                        </span>
-                                                    {% endif %}
-                                                    {% if emailaddress.primary %}
-                                                        <span class="inline-flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-[#58a6ff]/15 text-[#58a6ff] border border-[#58a6ff]/30 rounded-full text-[10px] sm:text-xs font-medium">
-                                                            <i class="fa-solid fa-star text-[8px] sm:text-xs"></i>
-                                                            Primary
-                                                        </span>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
+                            <div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#161b22]/50 transition-colors">
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[#c9d1d9] font-semibold text-sm">{{ emailaddress.email }}</span>
+                                        {% if emailaddress.primary %}
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#388bfd]/15 text-[#58a6ff] border border-[#388bfd]/40">Primary</span>
+                                        {% endif %}
+                                        {% if emailaddress.verified %}
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#238636]/15 text-[#3fb950] border border-[#238636]/40">Verified</span>
+                                        {% else %}
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#da3633]/15 text-[#f85149] border border-[#da3633]/40">Unverified</span>
+                                        {% endif %}
                                     </div>
-                                    
-                                    <!-- Action Buttons -->
-                                    <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap ml-10 sm:ml-0">
-                                        {% if not emailaddress.primary %}
-                                            <form method="post" action="{% url 'account_email' %}" class="inline">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="email" value="{{ emailaddress.email }}">
-                                                <button type="submit" name="action_primary" class="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-medium text-white bg-[#238636] rounded-full hover:bg-[#2ea043] transition-all shadow-sm hover:shadow-md">
-                                                    <i class="fa-solid fa-star text-[8px] sm:text-[10px]"></i>
-                                                    <span class="hidden xs:inline">Set Primary</span>
-                                                    <span class="xs:hidden">Primary</span>
-                                                </button>
-                                            </form>
-                                        {% endif %}
-                                        {% if not emailaddress.verified %}
-                                            <form method="post" action="{% url 'account_email' %}" class="inline">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="email" value="{{ emailaddress.email }}">
-                                                <button type="submit" name="action_send" class="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-medium text-[#c9d1d9] bg-[#21262d] border border-[#30363d] rounded-full hover:bg-[#30363d] hover:border-[#8b949e] transition-all">
-                                                    <i class="fa-solid fa-paper-plane text-[8px] sm:text-[10px]"></i>
-                                                    <span class="hidden xs:inline">Resend</span>
-                                                    <span class="xs:hidden">📧</span>
-                                                </button>
-                                            </form>
-                                        {% endif %}
+                                    <span class="text-xs text-[#8b949e]">Added on {{ emailaddress.user.date_joined|date:"M d, Y" }}</span>
+                                </div>
+                                
+                                <div class="flex items-center gap-2">
+                                    {% if not emailaddress.primary %}
+                                        {% if emailaddress.verified %}
                                         <form method="post" action="{% url 'account_email' %}" class="inline">
                                             {% csrf_token %}
                                             <input type="hidden" name="email" value="{{ emailaddress.email }}">
-                                            <button type="submit" name="action_remove" class="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-medium text-[#f85149] bg-[#161b22] border border-[#f85149]/30 rounded-full hover:bg-[#da3633]/20 hover:border-[#f85149]/50 transition-all" onclick="return confirm('Remove this email?')">
-                                                <i class="fa-solid fa-trash text-[8px] sm:text-[10px]"></i>
-                                                <span class="hidden xs:inline">Remove</span>
+                                            <button type="submit" name="action_primary" class="px-3 py-1.5 text-xs font-medium text-[#c9d1d9] bg-[#21262d] border border-[#30363d] rounded-md hover:bg-[#30363d] hover:border-[#8b949e] transition-all">
+                                                Set Primary
                                             </button>
                                         </form>
-                                    </div>
+                                        {% endif %}
+                                    {% endif %}
+                                    
+                                    {% if not emailaddress.verified %}
+                                        <form method="post" action="{% url 'account_email' %}" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="email" value="{{ emailaddress.email }}">
+                                            <button type="submit" name="action_send" class="px-3 py-1.5 text-xs font-medium text-[#c9d1d9] bg-[#21262d] border border-[#30363d] rounded-md hover:bg-[#30363d] hover:border-[#8b949e] transition-all">
+                                                Resend Verification
+                                            </button>
+                                        </form>
+                                    {% endif %}
+
+                                    {% if not emailaddress.primary %}
+                                    <form method="post" action="{% url 'account_email' %}" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="email" value="{{ emailaddress.email }}">
+                                        <button type="submit" name="action_remove" class="p-1.5 text-[#f85149] hover:bg-[#da3633]/15 rounded-md transition-colors" onclick="return confirm('Are you sure you want to remove this email address?')" title="Remove">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
                                 </div>
                             </div>
                         {% empty %}
-                            <div class="px-4 sm:px-6 py-12 sm:py-16 text-center">
-                                <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-[#30363d]/50 flex items-center justify-center">
-                                    <i class="fa-solid fa-inbox text-xl sm:text-2xl text-[#8b949e]"></i>
-                                </div>
-                                <p class="text-[#8b949e] text-xs sm:text-sm">No email addresses added yet</p>
+                            <div class="p-8 text-center">
+                                <p class="text-[#8b949e] text-sm">No email addresses found.</p>
                             </div>
                         {% endfor %}
                     </div>
                 </div>
 
                 <!-- Add Email Section -->
-                <div class="bg-[#161b22] border border-[#30363d] rounded-2xl overflow-hidden">
-                    <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-[#30363d]">
-                        <h2 class="text-sm sm:text-base font-semibold text-white">Add New Email</h2>
-                        <p class="text-[10px] sm:text-xs text-[#8b949e] mt-0.5 sm:mt-1">Add an additional email address to your account</p>
+                <div class="bg-[#0d1117] border border-[#30363d] rounded-md overflow-hidden">
+                    <div class="px-4 py-3 border-b border-[#30363d] bg-[#161b22]">
+                        <p class="text-sm font-semibold text-[#c9d1d9]">Add email address</p>
                     </div>
                     
-                    <div class="p-4 sm:p-6">
-                        <form method="post" action="{% url 'account_email' %}" class="space-y-3 sm:space-y-4">
+                    <div class="p-4">
+                        <form method="post" action="{% url 'account_email' %}" class="flex flex-col sm:flex-row gap-3">
                             {% csrf_token %}
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fa-solid fa-envelope text-[#8b949e] text-xs sm:text-sm"></i>
-                                </div>
+                            <div class="flex-1">
                                 <input type="email" name="email" required 
                                        placeholder="name@example.com" 
-                                       class="block w-full pl-9 sm:pl-10 pr-3 py-2 sm:py-2.5 bg-[#0d1117] border border-[#30363d] rounded-lg text-white text-xs sm:text-sm placeholder-[#6e7681] focus:ring-2 focus:ring-[#58a6ff] focus:border-transparent focus:outline-none transition-all">
+                                       class="w-full px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded-md text-sm text-[#c9d1d9] placeholder-[#8b949e] focus:ring-2 focus:ring-green-600 focus:border-transparent focus:outline-none transition-all">
                             </div>
-                            <button type="submit" name="action_add" class="w-full inline-flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-3 sm:px-4 border border-[rgba(240,246,252,0.1)] rounded-lg shadow-sm text-xs sm:text-sm font-semibold text-white bg-[#238636] hover:bg-[#2ea043] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2ea043] focus:ring-offset-[#161b22] transition-all">
-                                <i class="fa-solid fa-plus text-xs"></i>
-                                Add Email Address
+                            <button type="submit" name="action_add" class="px-4 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white text-sm font-medium rounded-md border border-[rgba(240,246,252,0.1)] shadow-sm transition-colors whitespace-nowrap">
+                                Add
                             </button>
                         </form>
                     </div>
                 </div>
 
                 <!-- Info Box -->
-                <div class="bg-[#1f6feb]/10 border border-[#1f6feb]/30 rounded-xl p-3 sm:p-4">
-                    <div class="flex gap-2 sm:gap-3">
-                        <div class="flex-shrink-0">
-                            <i class="fa-solid fa-circle-info text-[#58a6ff] text-base sm:text-lg"></i>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-xs sm:text-sm text-[#c9d1d9] leading-relaxed">
-                                <span class="font-medium">Why verify email?</span><br>
-                                <span class="text-[#8b949e]">Verified emails help secure your account and enable password recovery.</span>
-                            </p>
-                        </div>
+                <div class="flex gap-3 px-4 py-3 rounded-md border border-[#238636]/40 bg-[rgba(35,134,54,0.1)]">
+                    <i class="fa-solid fa-info-circle text-green-600 mt-0.5"></i>
+                    <div class="text-xs text-[#c9d1d9] space-y-1">
+                        <p><span class="font-semibold text-green-600">Primary email:</span> Used for account-related notifications and password resets.</p>
+                        <p><span class="font-semibold text-green-600">Verified email:</span> Required to access certain features and ensure account security.</p>
                     </div>
                 </div>
-
-                <!-- Footer bottom padding for mobile nav -->
-                <div class="h-24 lg:h-8"></div>
 
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}

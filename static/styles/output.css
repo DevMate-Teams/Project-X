@@ -1399,6 +1399,9 @@
   .border-\[\#1f6feb\]\/30 {
     border-color: color-mix(in oklab, #1f6feb 30%, transparent);
   }
+  .border-\[\#1f6feb\]\/40 {
+    border-color: color-mix(in oklab, #1f6feb 40%, transparent);
+  }
   .border-\[\#1f232b\] {
     border-color: #1f232b;
   }
@@ -1438,6 +1441,9 @@
   .border-\[\#333\] {
     border-color: #333;
   }
+  .border-\[\#388bfd\]\/40 {
+    border-color: color-mix(in oklab, #388bfd 40%, transparent);
+  }
   .border-\[\#21262d\] {
     border-color: #21262d;
   }
@@ -1464,6 +1470,9 @@
   }
   .border-\[\#238636\]\/30 {
     border-color: color-mix(in oklab, #238636 30%, transparent);
+  }
+  .border-\[\#238636\]\/40 {
+    border-color: color-mix(in oklab, #238636 40%, transparent);
   }
   .border-\[\#238636\]\/50 {
     border-color: color-mix(in oklab, #238636 50%, transparent);
@@ -1494,6 +1503,9 @@
   }
   .border-\[rgba\(240\,246\,252\,0\.1\)\] {
     border-color: rgba(240,246,252,0.1);
+  }
+  .border-\[rgba\(248\,81\,73\,0\.4\)\] {
+    border-color: rgba(248,81,73,0.4);
   }
   .border-amber-500 {
     border-color: var(--color-amber-500);
@@ -1669,6 +1681,9 @@
   .bg-\[\#262b34\]\/50 {
     background-color: color-mix(in oklab, #262b34 50%, transparent);
   }
+  .bg-\[\#388bfd\]\/15 {
+    background-color: color-mix(in oklab, #388bfd 15%, transparent);
+  }
   .bg-\[\#8957e5\] {
     background-color: #8957e5;
   }
@@ -1726,14 +1741,23 @@
   .bg-\[\#ef4444\] {
     background-color: #ef4444;
   }
+  .bg-\[rgba\(35\,134\,54\,0\.1\)\] {
+    background-color: rgba(35,134,54,0.1);
+  }
   .bg-\[rgba\(46\,160\,67\,0\.1\)\] {
     background-color: rgba(46,160,67,0.1);
+  }
+  .bg-\[rgba\(46\,160\,67\,0\.15\)\] {
+    background-color: rgba(46,160,67,0.15);
   }
   .bg-\[rgba\(56\,139\,253\,0\.1\)\] {
     background-color: rgba(56,139,253,0.1);
   }
   .bg-\[rgba\(56\,139\,253\,0\.15\)\] {
     background-color: rgba(56,139,253,0.15);
+  }
+  .bg-\[rgba\(248\,81\,73\,0\.15\)\] {
+    background-color: rgba(248,81,73,0.15);
   }
   .bg-amber-400 {
     background-color: var(--color-amber-400);
@@ -2349,6 +2373,9 @@
   .text-\[\#ffffff\] {
     color: #ffffff;
   }
+  .text-\[58a6ff\] {
+    color: 58a6ff;
+  }
   .text-amber-400 {
     color: var(--color-amber-400);
   }
@@ -2456,6 +2483,11 @@
   .placeholder-\[\#7d8590\] {
     &::placeholder {
       color: #7d8590;
+    }
+  }
+  .placeholder-\[\#8b949e\] {
+    &::placeholder {
+      color: #8b949e;
     }
   }
   .placeholder-gray-400 {
@@ -3258,6 +3290,13 @@
       }
     }
   }
+  .hover\:bg-\[\#da3633\]\/15 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: color-mix(in oklab, #da3633 15%, transparent);
+      }
+    }
+  }
   .hover\:bg-\[\#da3633\]\/20 {
     &:hover {
       @media (hover: hover) {
@@ -3804,6 +3843,11 @@
   .sm\:flex {
     @media (width >= 40rem) {
       display: flex;
+    }
+  }
+  .sm\:hidden {
+    @media (width >= 40rem) {
+      display: none;
     }
   }
   .sm\:inline {
