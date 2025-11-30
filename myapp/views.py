@@ -450,7 +450,7 @@ def follow_list(request, username):
             return HttpResponseRedirect(f'{request.path}?list=followers')
         
         print(list)
-        p = Paginator(list, 20)
+        p = Paginator(list, 25)
         page_number = request.GET.get('page')
         page_obj = p.get_page(page_number)
         
