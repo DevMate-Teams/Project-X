@@ -28,7 +28,7 @@ class userinfo(models.Model):
     website = models.URLField(blank=True, null=True)
     phone = PhoneNumberField(blank=True, null=True)
     gender = models.CharField(max_length=25, null=True, blank=True, choices=GENDER_CHOICES)
-    status = models.ForeignKey(user_status, related_name='developers', on_delete=models.SET_NULL, null=True)
+    status = models.ForeignKey(user_status, related_name='developers', on_delete=models.SET_NULL, null=True, blank=True)
 
     github = models.URLField(blank=True, null=True)  
     linkedin = models.URLField(blank=True, null=True) 

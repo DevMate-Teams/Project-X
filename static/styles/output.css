@@ -58,6 +58,7 @@
     --container-3xl: 48rem;
     --container-4xl: 56rem;
     --container-5xl: 64rem;
+    --container-6xl: 72rem;
     --container-7xl: 80rem;
     --text-xs: 0.75rem;
     --text-xs--line-height: calc(1 / 0.75);
@@ -75,6 +76,8 @@
     --text-3xl--line-height: calc(2.25 / 1.875);
     --text-4xl: 2.25rem;
     --text-4xl--line-height: calc(2.5 / 2.25);
+    --text-5xl: 3rem;
+    --text-5xl--line-height: 1;
     --font-weight-thin: 100;
     --font-weight-light: 300;
     --font-weight-normal: 400;
@@ -870,6 +873,9 @@
   }
   .max-w-5xl {
     max-width: var(--container-5xl);
+  }
+  .max-w-6xl {
+    max-width: var(--container-6xl);
   }
   .max-w-7xl {
     max-width: var(--container-7xl);
@@ -2016,6 +2022,9 @@
   .text-left {
     text-align: left;
   }
+  .text-right {
+    text-align: right;
+  }
   .font-\[\'Inter\'\] {
     font-family: 'Inter';
   }
@@ -2036,6 +2045,10 @@
   .text-4xl {
     font-size: var(--text-4xl);
     line-height: var(--tw-leading, var(--text-4xl--line-height));
+  }
+  .text-5xl {
+    font-size: var(--text-5xl);
+    line-height: var(--tw-leading, var(--text-5xl--line-height));
   }
   .text-base {
     font-size: var(--text-base);
@@ -2349,6 +2362,9 @@
   .opacity-80 {
     opacity: 80%;
   }
+  .opacity-90 {
+    opacity: 90%;
+  }
   .opacity-100 {
     opacity: 100%;
   }
@@ -2382,6 +2398,10 @@
   }
   .shadow-xl {
     --tw-shadow: 0 20px 25px -5px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 8px 10px -6px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  .ring {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .ring-1 {
@@ -4002,6 +4022,152 @@
     @media (width >= 64rem) {
       font-size: var(--text-xl);
       line-height: var(--tw-leading, var(--text-xl--line-height));
+    }
+  }
+  .\[\&_input\]\:w-full {
+    & input {
+      width: 100%;
+    }
+  }
+  .\[\&_input\]\:rounded-md {
+    & input {
+      border-radius: var(--radius-md);
+    }
+  }
+  .\[\&_input\]\:border {
+    & input {
+      border-style: var(--tw-border-style);
+      border-width: 1px;
+    }
+  }
+  .\[\&_input\]\:border-\[\#30363d\] {
+    & input {
+      border-color: #30363d;
+    }
+  }
+  .\[\&_input\]\:bg-\[\#0d1117\] {
+    & input {
+      background-color: #0d1117;
+    }
+  }
+  .\[\&_input\]\:p-3 {
+    & input {
+      padding: calc(var(--spacing) * 3);
+    }
+  }
+  .\[\&_input\]\:text-\[\#c9d1d9\] {
+    & input {
+      color: #c9d1d9;
+    }
+  }
+  .\[\&_input\]\:transition-all {
+    & input {
+      transition-property: all;
+      transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+      transition-duration: var(--tw-duration, var(--default-transition-duration));
+    }
+  }
+  .\[\&_input\]\:focus\:border-transparent {
+    & input {
+      &:focus {
+        border-color: transparent;
+      }
+    }
+  }
+  .\[\&_input\]\:focus\:ring-2 {
+    & input {
+      &:focus {
+        --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+        box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+      }
+    }
+  }
+  .\[\&_input\]\:focus\:ring-\[\#238636\] {
+    & input {
+      &:focus {
+        --tw-ring-color: #238636;
+      }
+    }
+  }
+  .\[\&_input\]\:focus\:outline-none {
+    & input {
+      &:focus {
+        --tw-outline-style: none;
+        outline-style: none;
+      }
+    }
+  }
+  .\[\&_select\]\:w-full {
+    & select {
+      width: 100%;
+    }
+  }
+  .\[\&_select\]\:rounded-md {
+    & select {
+      border-radius: var(--radius-md);
+    }
+  }
+  .\[\&_select\]\:border {
+    & select {
+      border-style: var(--tw-border-style);
+      border-width: 1px;
+    }
+  }
+  .\[\&_select\]\:border-\[\#30363d\] {
+    & select {
+      border-color: #30363d;
+    }
+  }
+  .\[\&_select\]\:bg-\[\#0d1117\] {
+    & select {
+      background-color: #0d1117;
+    }
+  }
+  .\[\&_select\]\:p-3 {
+    & select {
+      padding: calc(var(--spacing) * 3);
+    }
+  }
+  .\[\&_select\]\:text-\[\#c9d1d9\] {
+    & select {
+      color: #c9d1d9;
+    }
+  }
+  .\[\&_select\]\:transition-all {
+    & select {
+      transition-property: all;
+      transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+      transition-duration: var(--tw-duration, var(--default-transition-duration));
+    }
+  }
+  .\[\&_select\]\:focus\:border-transparent {
+    & select {
+      &:focus {
+        border-color: transparent;
+      }
+    }
+  }
+  .\[\&_select\]\:focus\:ring-2 {
+    & select {
+      &:focus {
+        --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+        box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+      }
+    }
+  }
+  .\[\&_select\]\:focus\:ring-\[\#238636\] {
+    & select {
+      &:focus {
+        --tw-ring-color: #238636;
+      }
+    }
+  }
+  .\[\&_select\]\:focus\:outline-none {
+    & select {
+      &:focus {
+        --tw-outline-style: none;
+        outline-style: none;
+      }
     }
   }
 }
