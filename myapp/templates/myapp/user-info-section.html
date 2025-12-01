@@ -1,5 +1,55 @@
 {% load static %}
 
+<style>
+    /* Select2 Dark Theme Overrides */
+    .select2-container--default .select2-selection--multiple {
+        background-color: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 0.375rem; /* rounded-md */
+        min-height: 42px;
+    }
+    .select2-container--default.select2-container--focus .select2-selection--multiple {
+        border-color: #238636; /* focus ring color */
+        outline: none;
+        box-shadow: 0 0 0 2px #238636;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #238636;
+        border: 1px solid #2ea043;
+        color: white;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        color: #e6edf3;
+        margin-right: 5px;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+        color: white;
+    }
+    .select2-dropdown {
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        color: #c9d1d9;
+    }
+    .select2-results__option {
+        color: #ffffff;
+    }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #238636;
+        color: white;
+    }
+    .select2-container--default .select2-results__option[aria-selected=true] {
+        background-color: #21262d;
+        color: white;
+    }
+    .select2-search__field {
+        color: #c9d1d9 !important;
+        margin-top: 7px !important;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+        padding: 0 5px;
+    }
+</style>
+
 {% if section == 'info' %}
 
 <div class="flex flex-col gap-6 w-full">
@@ -35,7 +85,7 @@
                     {% endif %}
                 </div>
                 <div class="flex justify-end">
-                    <button type="submit" class="bg-[#238636] hover:bg-[#2ea043] text-white px-3 py-1 rounded-md text-xs mt-2 font-medium transition-colors">Save Skill</button>
+                    <button type="submit" class="bg-[#238636] hover:bg-[#2ea043] text-white px-3 py-2 rounded-md text-xs mt-4 font-medium transition-colors">Save Skill</button>
                 </div>
             </form>
 
