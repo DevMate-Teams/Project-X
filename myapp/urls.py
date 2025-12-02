@@ -40,4 +40,8 @@ urlpatterns = [
     path('notifications/mark-all-read/', views.mark_all_read, name='mark_all_read'),
     path('notifications/count/', views.get_notification_count_api, name='get_notification_count'),
     path('notifications/<int:notification_id>/mark-read/', views.mark_notification_read, name='mark_notification_read'),
+    
+    # Geolocation (for Local feed)
+    path('api/geolocation/update/', views.update_user_geolocation, name='update_geolocation'),
+    path('api/geolocation/status/', views.get_user_geolocation_status, name='geolocation_status'),
 ]

@@ -22,12 +22,12 @@
         <!-- Quick Follow/Unfollow Toggle Button for Secondary Network -->
         {% with is_following=request.user.info|is_following:log.user %}
         {% if is_following %}
-        <button onclick="quickFollowUser('{{ log.user.user.username }}', this)" 
+        {% comment %} <button onclick="quickFollowUser('{{ log.user.user.username }}', this)" 
                 data-username="{{ log.user.user.username }}"
                 data-following="true"
                 class="quick-follow-btn text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors font-medium border border-gray-600">
             <i class="fa fa-check"></i> Following
-        </button>
+        </button> {% endcomment %}
         {% else %}
         <button onclick="quickFollowUser('{{ log.user.user.username }}', this)" 
                 data-username="{{ log.user.user.username }}"

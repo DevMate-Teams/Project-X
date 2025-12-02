@@ -5,7 +5,9 @@ from django.db.models import Q, Count, Exists, OuterRef, Subquery, Value, FloatF
 from django.db.models.functions import Coalesce
 from django.utils.timezone import now
 from datetime import timedelta
+from decimal import Decimal
 import random
+import math
 
 
 def get_explore_users(filter_dev, request, count=200, order_by='-created_at'):
@@ -50,6 +52,322 @@ ENGAGEMENT_SCORE_CAP = 10.0  # Cap engagement contribution to prevent stale popu
 # SECONDARY NETWORK CONFIG
 # =============================================================================
 SECONDARY_NETWORK_RATIO = 0.25  # 25% of feed from friends-of-friends
+
+
+# =============================================================================
+# LOCAL FEED - RADIUS MULTIPLIERS
+# =============================================================================
+# (max_distance_km, multiplier) - Closer users get higher boosts
+RADIUS_MULTIPLIERS = [
+    (5, 10.0),      # < 5 km: 10x boost (very close)
+    (20, 7.0),      # 5-20 km: 7x boost
+    (50, 4.0),      # 20-50 km: 4x boost
+    (100, 2.0),     # 50-100 km: 2x boost
+    (None, 0.5),    # > 100 km: 0.5x (far away)
+]
+
+# Skill matching bonus for Local feed
+SKILL_MATCH_BONUS = 1.5  # 1.5x multiplier for shared skills
+
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    """
+    Calculate the great-circle distance between two points on Earth
+    using the Haversine formula.
+    
+    Args:
+        lat1, lon1: Latitude and longitude of point 1 (in degrees)
+        lat2, lon2: Latitude and longitude of point 2 (in degrees)
+    
+    Returns:
+        Distance in kilometers
+    """
+    # Convert to floats if Decimal
+    lat1 = float(lat1) if isinstance(lat1, Decimal) else lat1
+    lon1 = float(lon1) if isinstance(lon1, Decimal) else lon1
+    lat2 = float(lat2) if isinstance(lat2, Decimal) else lat2
+    lon2 = float(lon2) if isinstance(lon2, Decimal) else lon2
+    
+    # Earth's radius in kilometers
+    R = 6371.0
+    
+    # Convert degrees to radians
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    delta_lat = math.radians(lat2 - lat1)
+    delta_lon = math.radians(lon2 - lon1)
+    
+    # Haversine formula
+    a = math.sin(delta_lat / 2) ** 2 + \
+        math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    
+    return R * c
+
+
+def get_radius_multiplier(distance_km):
+    """Get radius multiplier based on distance in kilometers."""
+    if distance_km is None:
+        return 0.5  # No location data
+    
+    for threshold, multiplier in RADIUS_MULTIPLIERS:
+        if threshold is None or distance_km <= threshold:
+            return multiplier
+    return 0.5  # Default for very far users
+
+
+def calculate_skill_match_score(user_skills, log_author_skills):
+    """
+    Calculate skill match bonus between current user and log author.
+    Returns multiplier based on shared skills.
+    """
+    if not user_skills or not log_author_skills:
+        return 1.0
+    
+    shared_skills = user_skills.intersection(log_author_skills)
+    if shared_skills:
+        # More shared skills = higher bonus, capped at 2.0
+        bonus = 1.0 + (len(shared_skills) * 0.2)
+        return min(bonus, 2.0)
+    return 1.0
+
+
+def calculate_local_log_score(log, user, distance_km, user_skills, viewed_log_ids, reacted_log_ids, commented_log_ids):
+    """
+    Calculate score for Local feed with radius-based ranking.
+    
+    FORMULA: Score = (radius_multiplier × recency_multiplier × skill_bonus) + (capped_engagement × freshness)
+    
+    This ensures:
+    - Nearby users rank MUCH higher than distant users
+    - Recency still matters significantly
+    - Skill overlap provides a bonus
+    - Viewed content drops significantly
+    """
+    # Get author's skills
+    log_author_skills = set(log.user.skills.values_list('id', flat=True)) if hasattr(log.user, 'skills') else set()
+    
+    # Radius multiplier - PRIMARY factor for local feed
+    radius = get_radius_multiplier(distance_km)
+    
+    # Recency multiplier
+    recency = get_recency_multiplier(log.timestamp)
+    
+    # Skill match bonus
+    skill_bonus = calculate_skill_match_score(user_skills, log_author_skills)
+    
+    # Base engagement (capped)
+    engagement_score = calculate_engagement_score(log)
+    
+    # Freshness penalty
+    freshness, interaction_type = get_interaction_status(
+        log.id, viewed_log_ids, reacted_log_ids, commented_log_ids
+    )
+    
+    # Store for display
+    log.user_interaction = interaction_type
+    log.distance_km = distance_km
+    
+    # LOCAL SCORING FORMULA: Radius × Recency × Skill, plus engagement bonus
+    # Primary score: radius * recency * skill (0-200 range)
+    primary_score = radius * recency * skill_bonus
+    
+    # Engagement bonus (reduced by freshness penalty)
+    engagement_bonus = engagement_score * freshness
+    
+    # If user has interacted, penalize primary score too
+    if interaction_type:
+        primary_score *= freshness
+    
+    return primary_score + engagement_bonus
+
+
+def _get_local_recommendation_reason(log, distance_km, shared_skills_count=0):
+    """
+    Generate recommendation reason for Local feed logs.
+    Shows distance-based or skill-based labels.
+    """
+    if distance_km is None:
+        return {
+            'text': 'Nearby developer',
+            'subtext': 'In your region',
+            'icon': 'fa-map-marker'
+        }
+    
+    if distance_km <= 5:
+        return {
+            'text': 'Very close',
+            'subtext': f'{distance_km:.1f} km away',
+            'icon': 'fa-map-marker'
+        }
+    elif distance_km <= 20:
+        return {
+            'text': 'Near you',
+            'subtext': f'{distance_km:.1f} km away',
+            'icon': 'fa-map-marker'
+        }
+    elif distance_km <= 50:
+        if shared_skills_count > 0:
+            return {
+                'text': f'{shared_skills_count} shared skills',
+                'subtext': f'{distance_km:.1f} km away',
+                'icon': 'fa-code'
+            }
+        return {
+            'text': 'In your area',
+            'subtext': f'{distance_km:.1f} km away',
+            'icon': 'fa-map-marker'
+        }
+    elif distance_km <= 100:
+        if shared_skills_count > 0:
+            return {
+                'text': f'{shared_skills_count} shared skills',
+                'subtext': f'{distance_km:.0f} km away',
+                'icon': 'fa-code'
+            }
+        return {
+            'text': 'Same region',
+            'subtext': f'{distance_km:.0f} km away',
+            'icon': 'fa-globe'
+        }
+    else:
+        if shared_skills_count > 0:
+            return {
+                'text': f'{shared_skills_count} shared skills',
+                'subtext': f'{distance_km:.0f} km away',
+                'icon': 'fa-code'
+            }
+        return {
+            'text': 'Suggested developer',
+            'subtext': f'{distance_km:.0f} km away',
+            'icon': 'fa-globe'
+        }
+
+
+def get_local_feed_logs(user, base_queryset, per_page, viewed_log_ids, reacted_log_ids, commented_log_ids):
+    """
+    Get logs for Local feed ranked by proximity and relevance.
+    
+    Strategy:
+    1. If user has coordinates, use haversine distance
+    2. If no coordinates, fall back to same city/state/country
+    3. Include skill-based suggestions even if far away
+    """
+    user_lat = user.latitude
+    user_lon = user.longitude
+    user_skills = set(user.skills.values_list('id', flat=True)) if hasattr(user, 'skills') else set()
+    
+    # Get all users with location data, excluding current user
+    candidate_logs = []
+    
+    if user_lat and user_lon:
+        # User has coordinates - use distance-based ranking
+        # Fetch logs from users who have coordinates
+        nearby_logs = list(
+            base_queryset.exclude(user=user)
+            .filter(user__latitude__isnull=False, user__longitude__isnull=False)
+            .select_related('user__user')
+            .order_by('-timestamp')[:per_page * 5]
+        )
+        
+        # Calculate distances and score each log
+        for log in nearby_logs:
+            author_lat = log.user.latitude
+            author_lon = log.user.longitude
+            
+            if author_lat and author_lon:
+                distance = haversine_distance(user_lat, user_lon, author_lat, author_lon)
+            else:
+                distance = None
+            
+            score = calculate_local_log_score(
+                log, user, distance, user_skills,
+                viewed_log_ids, reacted_log_ids, commented_log_ids
+            )
+            
+            # Calculate shared skills for recommendation label
+            author_skills = set(log.user.skills.values_list('id', flat=True)) if hasattr(log.user, 'skills') else set()
+            shared_count = len(user_skills.intersection(author_skills))
+            
+            log.feed_score = score
+            log.feed_type = 'local'
+            log.is_secondary_network = False
+            log.recommendation_reason = _get_local_recommendation_reason(log, distance, shared_count)
+            candidate_logs.append((score, random.random(), log))
+    
+    # Fallback: Include logs from same city/state/country (for users without coordinates)
+    fallback_filters = []
+    if user.city:
+        fallback_filters.append(Q(user__city__iexact=user.city))
+    if user.state:
+        fallback_filters.append(Q(user__state__iexact=user.state))
+    if user.country:
+        fallback_filters.append(Q(user__country__iexact=user.country))
+    
+    if fallback_filters:
+        # Combine with OR
+        fallback_query = fallback_filters[0]
+        for f in fallback_filters[1:]:
+            fallback_query |= f
+        
+        # Get logs from same region (excluding already fetched)
+        existing_log_ids = {log.id for _, _, log in candidate_logs}
+        
+        region_logs = list(
+            base_queryset.exclude(user=user)
+            .exclude(id__in=existing_log_ids)
+            .filter(fallback_query)
+            .select_related('user__user')
+            .order_by('-timestamp')[:per_page * 3]
+        )
+        
+        for log in region_logs:
+            # No coordinates, estimate based on matching fields
+            if log.user.city and user.city and log.user.city.lower() == user.city.lower():
+                distance = 10  # Same city ~ 10km estimate
+            elif log.user.state and user.state and log.user.state.lower() == user.state.lower():
+                distance = 50  # Same state ~ 50km estimate
+            else:
+                distance = 150  # Same country ~ 150km estimate
+            
+            score = calculate_local_log_score(
+                log, user, distance, user_skills,
+                viewed_log_ids, reacted_log_ids, commented_log_ids
+            )
+            
+            author_skills = set(log.user.skills.values_list('id', flat=True)) if hasattr(log.user, 'skills') else set()
+            shared_count = len(user_skills.intersection(author_skills))
+            
+            log.feed_score = score
+            log.feed_type = 'local'
+            log.is_secondary_network = False
+            log.recommendation_reason = _get_local_recommendation_reason(log, distance, shared_count)
+            candidate_logs.append((score, random.random(), log))
+    
+    # Sort by score and deduplicate
+    candidate_logs.sort(key=lambda x: (-x[0], x[1]))
+    
+    # DEBUG: Print local scores
+    print("\n" + "="*60)
+    print(f"LOCAL FEED SCORES FOR USER: {user.user.username}")
+    print("="*60)
+    for score, _, log in candidate_logs[:20]:
+        dist = getattr(log, 'distance_km', '?')
+        if isinstance(dist, (int, float)):
+            dist_str = f"{dist:.1f}km"
+        else:
+            dist_str = "N/A"
+        print(f"({log.sig} by @{log.user.user.username}) - Score: {score:.2f}, Distance: {dist_str}")
+    print("="*60 + "\n")
+    
+    seen_ids = set()
+    unique_logs = []
+    for _, _, log in candidate_logs:
+        if log.id not in seen_ids:
+            seen_ids.add(log.id)
+            unique_logs.append(log)
+    
+    return unique_logs
 
 
 def get_recency_multiplier(log_timestamp):
@@ -386,25 +704,11 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
         logs_list = [log for _, _, log in scored_logs]
         
     else:
-        # LOCAL FEED: For now, same as network (can be extended for location/org)
-        primary_logs = list(
-            base_queryset.filter(user_id__in=primary_network_ids)
-            .order_by('-timestamp')[:per_page * 3]
+        # LOCAL FEED: Proximity-based ranking with skill matching
+        logs_list = get_local_feed_logs(
+            user, base_queryset, per_page,
+            viewed_log_ids, reacted_log_ids, commented_log_ids
         )
-        
-        scored_logs = []
-        for log in primary_logs:
-            score = calculate_log_score(
-                log, user, viewed_log_ids, reacted_log_ids, commented_log_ids,
-                is_secondary=False
-            )
-            log.feed_score = score
-            log.feed_type = 'local'
-            log.is_secondary_network = False
-            scored_logs.append((score, random.random(), log))
-        
-        scored_logs.sort(key=lambda x: (-x[0], x[1]))
-        logs_list = [log for _, _, log in scored_logs]
     
     # Pagination
     paginator = Paginator(logs_list, per_page)

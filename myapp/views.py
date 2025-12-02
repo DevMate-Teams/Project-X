@@ -966,3 +966,98 @@ def load_more_notifications(request):
         'next_page': notifications.next_page_number() if notifications.has_next() else None,
         'current_page': notifications.number
     })
+
+
+# ============= GEOLOCATION VIEWS =============
+
+@login_required
+@require_POST
+def update_user_geolocation(request):
+    """
+    Update user's latitude/longitude from browser Geolocation API.
+    This provides accurate location for the Local feed algorithm.
+    
+    Expected POST data:
+    - latitude: float
+    - longitude: float
+    """
+    import json
+    from .utils.geolocation import update_user_location_from_browser
+    
+    try:
+        data = json.loads(request.body)
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        
+        if latitude is None or longitude is None:
+            return JsonResponse({
+                'success': False,
+                'error': 'Missing latitude or longitude'
+            }, status=400)
+        
+        # Validate coordinates
+        try:
+            lat = float(latitude)
+            lon = float(longitude)
+            
+            if not (-90 <= lat <= 90):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid latitude (must be -90 to 90)'
+                }, status=400)
+            
+            if not (-180 <= lon <= 180):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid longitude (must be -180 to 180)'
+                }, status=400)
+                
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid coordinate format'
+            }, status=400)
+        
+        success = update_user_location_from_browser(request.user.info, lat, lon)
+        
+        if success:
+            return JsonResponse({
+                'success': True,
+                'message': 'Location updated successfully'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to update location'
+            }, status=500)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+def get_user_geolocation_status(request):
+    """
+    Get current user's geolocation status.
+    Returns whether coordinates are set and their approximate values.
+    """
+    user_info = request.user.info
+    
+    has_location = bool(user_info.latitude and user_info.longitude)
+    
+    return JsonResponse({
+        'has_location': has_location,
+        'latitude': float(user_info.latitude) if user_info.latitude else None,
+        'longitude': float(user_info.longitude) if user_info.longitude else None,
+        'city': user_info.city,
+        'state': user_info.state,
+        'country': user_info.country,
+    })

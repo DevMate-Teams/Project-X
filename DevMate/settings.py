@@ -92,6 +92,7 @@ MIDDLEWARE = [
     
     "allauth.account.middleware.AccountMiddleware",
     "myapp.middleware.UpdateLastSeenMiddleware",
+    "myapp.middleware.AutoGeolocationMiddleware",  # Auto-detect location from IP
     "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 

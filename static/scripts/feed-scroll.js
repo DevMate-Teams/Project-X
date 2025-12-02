@@ -299,12 +299,81 @@
 
         initInfiniteScroll();
         initViewTracking();
+        initGeolocation();
 
         // Flush pending views on page unload
         window.addEventListener('beforeunload', flushPendingViews);
         window.addEventListener('pagehide', flushPendingViews);
 
         console.log('Feed scroll & view tracking initialized');
+    }
+
+    // ==========================================================================
+    // Browser Geolocation (for Local feed accuracy)
+    // ==========================================================================
+    function initGeolocation() {
+        // Check if we should request geolocation (only on Local tab or first visit)
+        const feedType = getFeedTypeFromURL();
+        const hasRequestedBefore = localStorage.getItem('geolocation_requested');
+        
+        // Request geolocation when viewing Local tab for the first time
+        if (feedType === 'local' && !hasRequestedBefore) {
+            requestBrowserGeolocation();
+        }
+    }
+
+    function requestBrowserGeolocation() {
+        // Check if Geolocation API is available
+        if (!navigator.geolocation) {
+            console.log('Geolocation not supported by browser');
+            return;
+        }
+
+        // Mark as requested (don't spam the user)
+        localStorage.setItem('geolocation_requested', 'true');
+
+        // Request position with high accuracy
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                // Success - send coordinates to server
+                const { latitude, longitude } = position.coords;
+                updateServerGeolocation(latitude, longitude);
+            },
+            (error) => {
+                // User denied or error occurred
+                console.log('Geolocation error:', error.message);
+                // We'll fall back to IP-based geolocation on server
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000 // 5 minutes
+            }
+        );
+    }
+
+    function updateServerGeolocation(latitude, longitude) {
+        fetch('/api/geolocation/update/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: JSON.stringify({ latitude, longitude })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Geolocation updated successfully');
+                // Optionally refresh the Local feed if we're on it
+                if (getFeedTypeFromURL() === 'local') {
+                    window.location.reload();
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error updating geolocation:', error);
+        });
     }
 
     // Initialize when DOM is ready
