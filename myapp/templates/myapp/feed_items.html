@@ -9,10 +9,10 @@
     
     <!-- Suggestion Label - Only for Secondary Network (LinkedIn/Instagram style) -->
     {% if log.recommendation_reason %}
-    <div class="px-4 py-2 bg-[#161b22] border-b border-[#21262d]/50 flex items-center gap-2">
+    <div class="px-4 py-2 bg-[#13171d] border-b border-gray-800 flex items-center gap-2">
         <i class="fa {{ log.recommendation_reason.icon }} text-[11px] text-gray-500"></i>
         <span class="text-[11px] text-gray-400">
-            {{ log.recommendation_reason.text }}
+            {{ log.recommendation_reason.text|linkify_usernames|safe }}
         </span>
         {% if log.recommendation_reason.subtext %}
         <span class="text-[10px] text-gray-600">· {{ log.recommendation_reason.subtext }}</span>
