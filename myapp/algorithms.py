@@ -55,19 +55,29 @@ SECONDARY_NETWORK_RATIO = 0.25  # 25% of feed from friends-of-friends
 
 
 # =============================================================================
-# LOCAL FEED - RADIUS MULTIPLIERS
+# LOCAL FEED - RADIUS MULTIPLIERS (DISTANCE IS PRIMARY)
 # =============================================================================
-# (max_distance_km, multiplier) - Closer users get higher boosts
+# (max_distance_km, multiplier) - Closer users get SIGNIFICANTLY higher boosts
+# Distance is the PRIMARY ranking factor - these multipliers create hard tiers
 RADIUS_MULTIPLIERS = [
-    (5, 10.0),      # < 5 km: 10x boost (very close)
-    (20, 7.0),      # 5-20 km: 7x boost
-    (50, 4.0),      # 20-50 km: 4x boost
-    (100, 2.0),     # 50-100 km: 2x boost
-    (None, 0.5),    # > 100 km: 0.5x (far away)
+    (5, 100.0),     # < 5 km: 100x boost (VERY CLOSE - top priority)
+    (20, 50.0),     # 5-20 km: 50x boost
+    (50, 20.0),     # 20-50 km: 20x boost
+    (100, 5.0),     # 50-100 km: 5x boost
+    (None, 1.0),    # > 100 km: 1x (baseline, far away)
 ]
+
+# Recency multiplier reduction for Local feed (compared to Network feed)
+# Only applies significant recency boost for NEARBY users (<25km)
+LOCAL_RECENCY_DAMPENER = 0.3  # Reduce recency impact by 70%
+NEARBY_RECENCY_BOOST = 2.0  # Extra recency boost for <25km users
+NEARBY_THRESHOLD_KM = 25  # Distance threshold for recency priority
 
 # Skill matching bonus for Local feed
 SKILL_MATCH_BONUS = 1.5  # 1.5x multiplier for shared skills
+
+# Noise control - reduced randomness for Local feed
+LOCAL_NOISE_FACTOR = 0.001  # Minimal noise to break exact ties only
 
 
 def haversine_distance(lat1, lon1, lat2, lon2):
@@ -134,32 +144,51 @@ def calculate_skill_match_score(user_skills, log_author_skills):
 
 def calculate_local_log_score(log, user, distance_km, user_skills, viewed_log_ids, reacted_log_ids, commented_log_ids):
     """
-    Calculate score for Local feed with radius-based ranking.
+    Calculate score for Local feed with DISTANCE-FIRST ranking.
     
-    FORMULA: Score = (radius_multiplier × recency_multiplier × skill_bonus) + (capped_engagement × freshness)
+    NEW FORMULA (distance dominates):
+    Score = radius_multiplier × (1 + dampened_recency + skill_bonus) × freshness
+    
+    Key principles:
+    1. DISTANCE IS PRIMARY - Radius multiplier creates hard tiers (100x, 50x, 20x, 5x, 1x)
+    2. RECENCY IS SECONDARY - Dampened by 70%, only significant for <25km users
+    3. SKILL BONUS - Small additive bonus for shared skills
+    4. FRESHNESS - Penalizes viewed/interacted content (viewed: 15%, reacted: 5%, commented: 2%)
     
     This ensures:
-    - Nearby users rank MUCH higher than distant users
-    - Recency still matters significantly
-    - Skill overlap provides a bonus
-    - Viewed content drops significantly
+    - A 5km user will ALWAYS rank above a 50km user (100x vs 20x base)
+    - Within same distance tier, recency breaks ties
+    - Nearby users (<25km) get extra recency priority
+    - Already viewed/interacted logs are significantly penalized
     """
     # Get author's skills
     log_author_skills = set(log.user.skills.values_list('id', flat=True)) if hasattr(log.user, 'skills') else set()
     
-    # Radius multiplier - PRIMARY factor for local feed
+    # 1. RADIUS MULTIPLIER - PRIMARY factor (creates hard distance tiers)
     radius = get_radius_multiplier(distance_km)
     
-    # Recency multiplier
-    recency = get_recency_multiplier(log.timestamp)
+    # 2. RECENCY - Secondary factor, dampened for Local feed
+    raw_recency = get_recency_multiplier(log.timestamp)
+    # Dampen recency so it doesn't override distance tiers
+    dampened_recency = raw_recency * LOCAL_RECENCY_DAMPENER
     
-    # Skill match bonus
+    # 3. NEARBY BONUS - Extra recency boost for users within 25km
+    # This makes recency matter more among nearby users
+    is_nearby = distance_km is not None and distance_km <= NEARBY_THRESHOLD_KM
+    if is_nearby:
+        dampened_recency *= NEARBY_RECENCY_BOOST
+    
+    # 4. SKILL MATCH BONUS - Small additive bonus
     skill_bonus = calculate_skill_match_score(user_skills, log_author_skills)
+    # Convert to additive (0.0 to 0.5 range)
+    skill_additive = (skill_bonus - 1.0) * 0.5
     
-    # Base engagement (capped)
+    # 5. ENGAGEMENT - Minor factor (capped)
     engagement_score = calculate_engagement_score(log)
+    # Normalize engagement to 0-0.5 range
+    engagement_additive = min(engagement_score / 20.0, 0.5)
     
-    # Freshness penalty
+    # 6. FRESHNESS PENALTY
     freshness, interaction_type = get_interaction_status(
         log.id, viewed_log_ids, reacted_log_ids, commented_log_ids
     )
@@ -168,18 +197,14 @@ def calculate_local_log_score(log, user, distance_km, user_skills, viewed_log_id
     log.user_interaction = interaction_type
     log.distance_km = distance_km
     
-    # LOCAL SCORING FORMULA: Radius × Recency × Skill, plus engagement bonus
-    # Primary score: radius * recency * skill (0-200 range)
-    primary_score = radius * recency * skill_bonus
+    # FINAL SCORING FORMULA:
+    # Base: radius (creates tiers)
+    # Multiplied by: (1 + recency + skill + engagement) to break ties within tiers
+    # Then: freshness penalty for viewed content
+    secondary_factors = 1.0 + dampened_recency + skill_additive + engagement_additive
+    score = radius * secondary_factors * freshness
     
-    # Engagement bonus (reduced by freshness penalty)
-    engagement_bonus = engagement_score * freshness
-    
-    # If user has interacted, penalize primary score too
-    if interaction_type:
-        primary_score *= freshness
-    
-    return primary_score + engagement_bonus
+    return score
 
 
 def _get_local_recommendation_reason(log, distance_km, shared_skills_count=0):
@@ -293,7 +318,9 @@ def get_local_feed_logs(user, base_queryset, per_page, viewed_log_ids, reacted_l
             log.feed_type = 'local'
             log.is_secondary_network = False
             log.recommendation_reason = _get_local_recommendation_reason(log, distance, shared_count)
-            candidate_logs.append((score, random.random(), log))
+            # Use minimal noise for tie-breaking only (controlled randomness)
+            noise = random.random() * LOCAL_NOISE_FACTOR
+            candidate_logs.append((score, noise, log))
     
     # Fallback: Include logs from same city/state/country (for users without coordinates)
     fallback_filters = []
@@ -342,7 +369,9 @@ def get_local_feed_logs(user, base_queryset, per_page, viewed_log_ids, reacted_l
             log.feed_type = 'local'
             log.is_secondary_network = False
             log.recommendation_reason = _get_local_recommendation_reason(log, distance, shared_count)
-            candidate_logs.append((score, random.random(), log))
+            # Use minimal noise for tie-breaking only (controlled randomness)
+            noise = random.random() * LOCAL_NOISE_FACTOR
+            candidate_logs.append((score, noise, log))
     
     # Sort by score and deduplicate
     candidate_logs.sort(key=lambda x: (-x[0], x[1]))
