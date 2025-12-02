@@ -100,7 +100,7 @@ def save_log(request):
             log = logform.save(commit=False)
             log.user = request.user.info
             raw_snippet = request.POST.get('code_snippet', '').strip()
-            log.code_snippet = raw_snippet[:5000] if raw_snippet else None
+            log.code_snippet = raw_snippet[:10000] if raw_snippet else None
             log.link = request.POST.get('link', '').strip()
 
             log.save()
