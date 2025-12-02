@@ -33,7 +33,7 @@
     <div class="p-4 space-y-3">
         <div class="flex items-start gap-2">
             <span class="text-green-400 mt-0.5 text-sm flex-shrink-0">&gt;_</span>
-            <p class="text-gray-200 text-sm leading-relaxed font-mono flex-1">{{ log.content }}</p>
+            <p class="text-gray-200 text-sm leading-relaxed font-mono flex-1">{{ log.content|parse_mentions }}</p>
         </div>
 
         <!-- Snapshot image -->

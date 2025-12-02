@@ -139,3 +139,134 @@
 
     backdrop-filter: blur(4px);
 }
+
+/* ============================================
+   @mention Styling
+   ============================================ */
+
+/* Mention links in log content and comments */
+.mention-link,
+a[href^="/user-profile/"].text-blue-400 {
+    color: #58a6ff;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.mention-link:hover,
+a[href^="/user-profile/"].text-blue-400:hover {
+    color: #79c0ff;
+    text-decoration: underline;
+}
+
+/* Mention dropdown styling (autocomplete) */
+.mention-dropdown {
+    position: absolute;
+    z-index: 9999;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    max-height: 280px;
+    overflow-y: auto;
+    min-width: 220px;
+    max-width: 320px;
+}
+
+.mention-dropdown.hidden {
+    display: none;
+}
+
+.mention-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid #21262d;
+}
+
+.mention-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.mention-dropdown-item:hover,
+.mention-dropdown-item.selected {
+    background: #1f242c;
+}
+
+.mention-dropdown-item.selected {
+    background: darkgreen;
+    color:white
+}
+
+.mention-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #30363d;
+    flex-shrink: 0;
+}
+
+.mention-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.mention-username {
+    font-weight: 600;
+    font-size: 13px;
+    color: #e6edf3;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mention-username .at-symbol {
+    color: silver
+}
+
+.mention-fullname {
+    font-size: 12px;
+    color: gainsboro;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mention-following-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    background: rgba(35, 134, 54, 0.2);
+    color: #3fb950;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.mention-no-results,
+.mention-loading {
+    padding: 16px;
+    text-align: center;
+    color: #8b949e;
+    font-size: 13px;
+}
+
+/* Scrollbar styling for mention dropdown */
+.mention-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mention-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.mention-dropdown::-webkit-scrollbar-thumb {
+    background: #30363d;
+    border-radius: 3px;
+}
+
+.mention-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #484f58;
+}

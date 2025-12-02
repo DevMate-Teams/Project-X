@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from .forms import LogForm, CommentForm
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from .models import Log, Reaction, Comment
 from .utils.streaks import get_24h_log_stats, streak_calculation, calculate_max_streak
 from django.contrib.auth.models import User
@@ -14,8 +14,9 @@ from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from collections import Counter, defaultdict
 from datetime import date, timedelta
-from django.db.models import Avg
+from django.db.models import Avg, Q
 from django.contrib import messages
+from myapp.models import userinfo
 
 def chunk_list(data, size):
     it = iter(data)
@@ -255,3 +256,57 @@ def delete_comment(request, comment_id):
     
     comment.delete()
     return JsonResponse({'success': True, 'deleted_count': total_deleted})
+
+
+@login_required
+@require_GET
+def search_users_for_mention(request):
+    """
+    API endpoint for @mention autocomplete.
+    Returns matching usernames as the user types.
+    """
+    query = request.GET.get('q', '').strip()
+    
+    if not query or len(query) < 1:
+        return JsonResponse({'users': []})
+    
+    # Search users by username, prioritizing:
+    # 1. Users the current user follows
+    # 2. Users who have interacted with the current user
+    # 3. All other matching users
+    
+    current_user = request.user.info
+    
+    # Get users matching the query
+    users = User.objects.filter(
+        Q(username__icontains=query) | 
+        Q(first_name__icontains=query) |
+        Q(last_name__icontains=query)
+    ).exclude(
+        id=request.user.id  # Exclude current user
+    ).select_related('info')[:15]
+    
+    # Get IDs of users the current user follows
+    following_ids = set(
+        current_user.following.values_list('following__user_id', flat=True)
+    )
+    
+    # Build result list with priority
+    result = []
+    for user in users:
+        try:
+            info = user.info
+            result.append({
+                'username': user.username,
+                'full_name': f"{user.first_name} {user.last_name}".strip() or user.username,
+                'profile_image': info.profile_image.url if info.profile_image else '/static/assets/default-avatar.png',
+                'is_following': user.id in following_ids,
+            })
+        except userinfo.DoesNotExist:
+            continue
+    
+    # Sort: followed users first, then alphabetically
+    result.sort(key=lambda x: (not x['is_following'], x['username'].lower()))
+    
+    return JsonResponse({'users': result[:10]})
+

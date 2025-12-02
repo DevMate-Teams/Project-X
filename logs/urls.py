@@ -10,4 +10,6 @@ urlpatterns = [
     
     path("load-more-profile-logs/<str:username>/", views.load_more_profile_logs, name="load_more_profile_logs"),
     
+    # Mention autocomplete API
+    path("api/users/search/", views.search_users_for_mention, name="search_users_for_mention"),
 ]
