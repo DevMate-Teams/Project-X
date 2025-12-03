@@ -260,6 +260,16 @@ if not DEBUG:
 
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    
+    # Development fallback location for Local feed (IP geolocation doesn't work on localhost)
+    # Change these coordinates to your preferred test location
+    GEOLOCATION_DEV_FALLBACK = {
+        'lat': 12.9716,       # Latitude
+        'lon': 77.5946,       # Longitude
+        'city': 'Bangalore',
+        'state': 'Karnataka',
+        'country': 'India',
+    }
 else:
     # Production SMTP configuration
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

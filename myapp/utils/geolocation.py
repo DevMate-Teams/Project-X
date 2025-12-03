@@ -14,6 +14,10 @@ This separation ensures:
 - IP fallback works even if browser location is fresh
 - Browser prompt appears even if IP location is fresh
 - Each method refreshes on its own schedule
+
+Environment handling:
+- Production: Uses real IP geolocation APIs
+- Development: Uses GEOLOCATION_DEV_FALLBACK from settings (localhost can't use IP APIs)
 """
 
 import requests
@@ -28,6 +32,15 @@ logger = logging.getLogger(__name__)
 # Location refresh configuration
 IP_LOCATION_REFRESH_HOURS = 24  # Refresh IP-based location every 24 hours
 BROWSER_LOCATION_REFRESH_HOURS = 168  # Refresh browser location every 7 days (more accurate, less frequent)
+
+# Default development fallback (Bangalore, India) - Override in settings.py
+DEFAULT_DEV_FALLBACK = {
+    'latitude': Decimal('12.9716'),
+    'longitude': Decimal('77.5946'),
+    'city': 'Bangalore',
+    'state': 'Karnataka',
+    'country': 'India',
+}
 
 
 # Free IP geolocation services (in order of preference)
@@ -57,10 +70,37 @@ IP_GEOLOCATION_SERVICES = [
 ]
 
 
+def is_localhost_request(request):
+    """
+    Check if request is from localhost/development environment.
+    """
+    ip = request.META.get('REMOTE_ADDR', '')
+    return ip in ('127.0.0.1', 'localhost', '::1') or ip.startswith(('10.', '172.', '192.168.'))
+
+
+def get_development_fallback():
+    """
+    Get fallback location for development environment.
+    Uses GEOLOCATION_DEV_FALLBACK from settings or defaults to Bangalore.
+    """
+    fallback = getattr(settings, 'GEOLOCATION_DEV_FALLBACK', None)
+    if fallback:
+        return {
+            'latitude': Decimal(str(fallback.get('lat', 12.9716))),
+            'longitude': Decimal(str(fallback.get('lon', 77.5946))),
+            'city': fallback.get('city', 'Development'),
+            'state': fallback.get('state', ''),
+            'country': fallback.get('country', 'Local'),
+        }
+    return DEFAULT_DEV_FALLBACK.copy()
+
+
 def get_client_ip(request):
     """
     Extract the client's IP address from the request.
     Handles reverse proxies (X-Forwarded-For header).
+    
+    Returns None for localhost/private IPs (use get_development_fallback instead).
     """
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
@@ -69,7 +109,7 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR')
     
-    # Don't use localhost/private IPs
+    # Don't use localhost/private IPs for geolocation
     if ip in ('127.0.0.1', 'localhost', '::1'):
         return None
     if ip and ip.startswith(('10.', '172.', '192.168.')):
@@ -174,6 +214,9 @@ def update_user_location_from_ip(user_info, request, force=False):
     Auto-update user's latitude/longitude from their IP address.
     Updates if IP location is stale or not set.
     
+    In development (localhost), uses GEOLOCATION_DEV_FALLBACK from settings
+    since IP geolocation APIs don't work for private IPs.
+    
     Args:
         user_info: The userinfo model instance
         request: The Django request object
@@ -186,12 +229,20 @@ def update_user_location_from_ip(user_info, request, force=False):
     if not force and not is_ip_location_stale(user_info):
         return False
     
-    ip_address = get_client_ip(request)
-    if not ip_address:
-        return False
+    location_data = None
     
-    location_data = get_location_from_ip(ip_address)
+    # Try real IP geolocation first
+    ip_address = get_client_ip(request)
+    if ip_address:
+        location_data = get_location_from_ip(ip_address)
+    
+    # Development fallback: use configured coordinates for localhost
+    if not location_data and is_localhost_request(request):
+        logger.info(f"Using development fallback location for user {user_info.user.username}")
+        location_data = get_development_fallback()
+    
     if not location_data:
+        logger.warning(f"Could not determine location for user {user_info.user.username}")
         return False
     
     try:
