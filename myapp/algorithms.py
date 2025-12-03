@@ -330,7 +330,7 @@ def get_local_feed_logs(user, base_queryset, per_page, viewed_log_ids, reacted_l
             base_queryset.exclude(user=user)
             .filter(user__latitude__isnull=False, user__longitude__isnull=False)
             .select_related('user__user')
-            .order_by('-timestamp')[:per_page * 5]
+            .order_by('-timestamp')[:500]  # Fixed limit for consistent coverage
         )
         
         # Calculate distances and score each log
@@ -383,7 +383,7 @@ def get_local_feed_logs(user, base_queryset, per_page, viewed_log_ids, reacted_l
             .exclude(id__in=existing_log_ids)
             .filter(fallback_query)
             .select_related('user__user')
-            .order_by('-timestamp')[:per_page * 3]
+            .order_by('-timestamp')[:300]  # Fixed limit for consistent coverage
         )
         
         for log in region_logs:
@@ -1070,7 +1070,7 @@ def get_global_feed_logs(user, base_queryset, per_page, viewed_log_ids, reacted_
         .exclude(user_id__in=all_exclude_ids)
         .select_related('user__user')
         .prefetch_related('user__skills')
-        .order_by('-timestamp')[:per_page * 10]  # Fetch extra for scoring
+        .order_by('-timestamp')[:1000]  # Fixed limit for consistent coverage
     )
     
     # Score each log
@@ -1126,10 +1126,6 @@ def get_global_feed_logs(user, base_queryset, per_page, viewed_log_ids, reacted_
         if current_count < MAX_LOGS_PER_AUTHOR:
             diverse_logs.append(log)
             author_counts[author_id] = current_count + 1
-        
-        # Stop when we have enough
-        if len(diverse_logs) >= per_page * 3:
-            break
     
     # DEBUG: Print Global feed scores
     print("\n" + "="*70)
@@ -1185,14 +1181,14 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
         # Primary network logs (70-80% of feed)
         primary_logs = list(
             base_queryset.filter(user_id__in=primary_network_ids)
-            .order_by('-timestamp')[:per_page * 3]  # Fetch extra for scoring
+            .order_by('-timestamp')[:500]  # Fixed limit for consistent coverage
         )
         
         # Secondary network logs (20-30% of feed)
         secondary_network_ids = get_secondary_network_user_ids(user, primary_network_ids)
         secondary_logs = list(
             base_queryset.filter(user_id__in=secondary_network_ids)
-            .order_by('-timestamp')[:per_page * 2]
+            .order_by('-timestamp')[:300]  # Fixed limit for consistent coverage
         )
         
         # Score all logs - only secondary network gets recommendation labels
