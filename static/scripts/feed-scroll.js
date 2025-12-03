@@ -292,14 +292,18 @@
     // Initialization
     // ==========================================================================
     function init() {
-        // Only initialize on pages with feed container
+        // Initialize geolocation on any page (not just feed pages)
+        // This ensures new users get prompted regardless of which tab they visit first
+        initGeolocation();
+        
+        // Only initialize feed-specific features on pages with feed container
         if (!document.getElementById('feed-container')) {
+            console.log('No feed container found, skipping feed scroll init');
             return;
         }
 
         initInfiniteScroll();
         initViewTracking();
-        initGeolocation();
 
         // Flush pending views on page unload
         window.addEventListener('beforeunload', flushPendingViews);
@@ -314,8 +318,9 @@
     function initGeolocation() {
         const feedType = getFeedTypeFromURL();
         
-        // On Local tab, check if we need to refresh location
+        // On Local tab, always check if we need to refresh location
         if (feedType === 'local') {
+            console.log('Local tab detected, checking geolocation status...');
             checkAndRefreshGeolocation();
         }
     }
@@ -326,10 +331,18 @@
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-            }
+            },
+            credentials: 'same-origin'  // Ensure cookies are sent
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Geolocation status:', data);
+            
             // Request browser location if:
             // 1. No location set, OR
             // 2. Location is stale (needs_refresh = true)
@@ -342,14 +355,23 @@
         })
         .catch(error => {
             console.error('Error checking geolocation status:', error);
-            // Fall back to checking localStorage
-            const lastRequest = localStorage.getItem('geolocation_last_request');
-            const dayAgo = Date.now() - (24 * 60 * 60 * 1000);
-            
-            if (!lastRequest || parseInt(lastRequest) < dayAgo) {
-                requestBrowserGeolocation();
-            }
+            // On error, try to request geolocation anyway for new users
+            // Use a simple rate limit to avoid spamming
+            tryFallbackGeolocation();
         });
+    }
+
+    function tryFallbackGeolocation() {
+        // Fallback: Check localStorage for last request time
+        const lastRequest = localStorage.getItem('geolocation_last_request');
+        const hourAgo = Date.now() - (60 * 60 * 1000);  // 1 hour rate limit
+        
+        if (!lastRequest || parseInt(lastRequest) < hourAgo) {
+            console.log('Fallback: Requesting geolocation due to API error');
+            requestBrowserGeolocation();
+        } else {
+            console.log('Fallback: Rate limited, last request was recent');
+        }
     }
 
     function requestBrowserGeolocation() {
@@ -359,6 +381,14 @@
             return;
         }
 
+        // Check if we're in a secure context (required for geolocation)
+        if (!window.isSecureContext) {
+            console.log('Geolocation requires secure context (HTTPS)');
+            return;
+        }
+
+        console.log('Requesting browser geolocation permission...');
+        
         // Update last request timestamp
         localStorage.setItem('geolocation_last_request', Date.now().toString());
 
@@ -367,17 +397,30 @@
             (position) => {
                 // Success - send coordinates to server
                 const { latitude, longitude } = position.coords;
+                console.log('Got browser location:', latitude, longitude);
                 updateServerGeolocation(latitude, longitude);
             },
             (error) => {
-                // User denied or error occurred
-                console.log('Geolocation error:', error.message);
+                // Handle specific error cases
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        console.log('Geolocation permission denied by user');
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        console.log('Geolocation position unavailable');
+                        break;
+                    case error.TIMEOUT:
+                        console.log('Geolocation request timed out');
+                        break;
+                    default:
+                        console.log('Geolocation error:', error.message);
+                }
                 // We'll fall back to IP-based geolocation on server
             },
             {
                 enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 300000 // 5 minutes
+                timeout: 15000,  // Increased timeout for slower connections
+                maximumAge: 0    // Always get fresh position, don't use cached
             }
         );
     }
