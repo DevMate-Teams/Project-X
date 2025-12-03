@@ -377,13 +377,15 @@
     function requestBrowserGeolocation() {
         // Check if Geolocation API is available
         if (!navigator.geolocation) {
-            console.log('Geolocation not supported by browser');
+            console.log('Geolocation not supported by browser, using IP fallback');
+            triggerIPFallback();
             return;
         }
 
         // Check if we're in a secure context (required for geolocation)
         if (!window.isSecureContext) {
-            console.log('Geolocation requires secure context (HTTPS)');
+            console.log('Geolocation requires secure context (HTTPS), using IP fallback');
+            triggerIPFallback();
             return;
         }
 
@@ -401,21 +403,24 @@
                 updateServerGeolocation(latitude, longitude);
             },
             (error) => {
-                // Handle specific error cases
+                // Handle specific error cases and trigger IP fallback
                 switch (error.code) {
                     case error.PERMISSION_DENIED:
-                        console.log('Geolocation permission denied by user');
+                        console.log('Geolocation permission denied by user, triggering IP fallback');
+                        triggerIPFallback();
                         break;
                     case error.POSITION_UNAVAILABLE:
-                        console.log('Geolocation position unavailable');
+                        console.log('Geolocation position unavailable, triggering IP fallback');
+                        triggerIPFallback();
                         break;
                     case error.TIMEOUT:
-                        console.log('Geolocation request timed out');
+                        console.log('Geolocation request timed out, triggering IP fallback');
+                        triggerIPFallback();
                         break;
                     default:
-                        console.log('Geolocation error:', error.message);
+                        console.log('Geolocation error:', error.message, 'triggering IP fallback');
+                        triggerIPFallback();
                 }
-                // We'll fall back to IP-based geolocation on server
             },
             {
                 enableHighAccuracy: true,
@@ -423,6 +428,39 @@
                 maximumAge: 0    // Always get fresh position, don't use cached
             }
         );
+    }
+
+    function triggerIPFallback() {
+        /**
+         * Call server to set location via IP geolocation.
+         * Used when browser geolocation is unavailable or denied.
+         */
+        console.log('Triggering IP-based geolocation fallback...');
+        
+        fetch('/api/geolocation/ip-fallback/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('IP fallback successful:', data.city, data.state);
+                // Refresh Local feed to show results based on IP location
+                if (getFeedTypeFromURL() === 'local') {
+                    window.location.reload();
+                }
+            } else {
+                console.error('IP fallback failed:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error in IP fallback:', error);
+        });
     }
 
     function updateServerGeolocation(latitude, longitude) {

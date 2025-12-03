@@ -1047,7 +1047,7 @@ def update_user_geolocation(request):
 def get_user_geolocation_status(request):
     """
     Get current user's geolocation status.
-    Returns whether coordinates are set, their values, and if refresh is needed.
+    Returns whether coordinates are set, their values, and if browser refresh is needed.
     """
     from .utils.geolocation import should_request_browser_location
     
@@ -1064,5 +1064,51 @@ def get_user_geolocation_status(request):
         'city': user_info.city,
         'state': user_info.state,
         'country': user_info.country,
-        'last_updated': user_info.location_updated_at.isoformat() if user_info.location_updated_at else None,
+        'ip_updated_at': user_info.location_ip_updated_at.isoformat() if user_info.location_ip_updated_at else None,
+        'browser_updated_at': user_info.location_browser_updated_at.isoformat() if user_info.location_browser_updated_at else None,
     })
+
+
+@login_required
+@require_POST
+def trigger_ip_geolocation_fallback(request):
+    """
+    Fallback endpoint to trigger IP-based geolocation when browser permission is denied.
+    
+    Called by JavaScript when:
+    - User denies browser geolocation permission
+    - Browser geolocation API fails
+    - navigator.geolocation is not available
+    
+    This ensures users still get location-based features even without browser permission.
+    Forces an IP geolocation update regardless of staleness.
+    """
+    from .utils.geolocation import update_user_location_from_ip
+    
+    try:
+        user_info = request.user.info
+        
+        # Force IP-based geolocation update (ignore staleness check)
+        success = update_user_location_from_ip(user_info, request, force=True)
+        
+        if success:
+            return JsonResponse({
+                'success': True,
+                'message': 'Location set via IP fallback',
+                'latitude': float(user_info.latitude) if user_info.latitude else None,
+                'longitude': float(user_info.longitude) if user_info.longitude else None,
+                'city': user_info.city,
+                'state': user_info.state,
+                'country': user_info.country,
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Could not determine location from IP address'
+            }, status=500)
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

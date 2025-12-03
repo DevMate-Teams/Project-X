@@ -13,10 +13,11 @@ class UpdateLastSeenMiddleware(MiddlewareMixin):
 class AutoGeolocationMiddleware(MiddlewareMixin):
     """
     Middleware to auto-detect user location from IP address.
-    Runs periodically to refresh stale location data.
+    Runs periodically to refresh stale IP-based location data.
     Uses a session flag to avoid repeated API calls within the same session.
     
-    Location is refreshed every 24 hours to handle users who move.
+    IP location is refreshed every 24 hours to handle users who move.
+    This is separate from browser geolocation (which has its own 7-day refresh).
     """
     
     def process_view(self, request, view_func, view_args, view_kwargs):
@@ -24,20 +25,20 @@ class AutoGeolocationMiddleware(MiddlewareMixin):
             return None
         
         # Skip if already checked this session
-        if request.session.get('geolocation_checked'):
+        if request.session.get('ip_geolocation_checked'):
             return None
         
         # Mark as checked for this session
-        request.session['geolocation_checked'] = True
+        request.session['ip_geolocation_checked'] = True
         
         user_info = request.user.info
         
         # Try to update location from IP (handles staleness check internally)
         try:
-            from .utils.geolocation import update_user_location_from_ip, is_location_stale
+            from .utils.geolocation import update_user_location_from_ip, is_ip_location_stale
             
-            # Only make API call if location is stale or not set
-            if is_location_stale(user_info):
+            # Only make API call if IP location is stale or not set
+            if is_ip_location_stale(user_info):
                 update_user_location_from_ip(user_info, request)
         except Exception:
             # Don't break the request if geolocation fails

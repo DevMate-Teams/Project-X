@@ -44,4 +44,5 @@ urlpatterns = [
     # Geolocation (for Local feed)
     path('api/geolocation/update/', views.update_user_geolocation, name='update_geolocation'),
     path('api/geolocation/status/', views.get_user_geolocation_status, name='geolocation_status'),
+    path('api/geolocation/ip-fallback/', views.trigger_ip_geolocation_fallback, name='geolocation_ip_fallback'),
 ]
