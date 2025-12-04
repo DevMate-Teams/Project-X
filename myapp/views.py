@@ -138,9 +138,12 @@ def home_page(request):
     from .algorithms import get_personalized_feed
     feed_items = get_personalized_feed(request, type=feed_type, page=1, per_page=20)
     
-    # Fetch trending logs (What's Hot Now)
-    from logs.utils.trending import get_trending_logs
-    trending_logs = get_trending_logs(limit=5, hours=24)
+    # Fetch trending logs (What's Hot Now) - Only for Global tab
+    trending_logs = []
+    if feed_type == 'global':
+        from logs.utils.trending import get_trending_logs
+        trending_logs = get_trending_logs(limit=5, hours=24)
+    
     print(feed_items)
     
     logform = LogForm()
@@ -151,12 +154,19 @@ def home_page(request):
         from .utils.popular_developers import get_popular_developers
         popular_developers = get_popular_developers(request.user, limit=10)
     
+    # Get nearby developers for Local tab
+    nearby_developers = []
+    if feed_type == 'local':
+        from .utils.nearby_developers import get_nearby_developers
+        nearby_developers = get_nearby_developers(request.user, limit=5)
+    
     context = {
         'logform': logform,
         'feed_items': feed_items,
         'feed_type': feed_type,
         'trending_logs': trending_logs,
         'populate_popular_developers': popular_developers,
+        'nearby_developers': nearby_developers,
     }
 
     # User is authenticated and profile is complete

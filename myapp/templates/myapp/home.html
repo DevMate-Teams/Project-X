@@ -135,15 +135,15 @@
                         </div>
                     </div>
 
-                    <!-- What's Hot Now Section (Mobile/Tablet Only) -->
-                    {% if feed_items %}
+                    <!-- What's Hot Now Section (Mobile/Tablet Only - Global Tab) -->
+                    {% if feed_items and feed_type == 'global' and trending_logs %}
                     <div class="block min-[1110px]:hidden">
                         {% include 'includes/trending_logs.html' %}
                     </div>
                     {% endif %}
 
                     {% if feed_items %}
-                        <div class="flex flex-col gap-y-6 lg:mt-2 -mt-4" id="feed-container">
+                        <div class="flex flex-col gap-y-6" id="feed-container">
                             {% include "myapp/feed_items.html" %}
                         </div>
                         <div id="loading" class="text-center my-4 hidden">
@@ -167,8 +167,16 @@
             <!-- Right Sidebar (Desktop Only) -->
             {% if feed_items %}
             <div class="hidden min-[1110px]:block min-[1110px]:w-72 flex-shrink-0">
-                <div class=" top-6">
-                    {% include 'includes/trending_logs.html' %}
+                <div class="top-6 space-y-6">
+                    <!-- Nearby Developers (Desktop - Local Tab Only) -->
+                    {% if feed_type == 'local' and nearby_developers %}
+                        {% include 'includes/nearby_developers.html' %}
+                    {% endif %}
+                    
+                    <!-- What's Hot Now (Global Tab Only) -->
+                    {% if feed_type == 'global' and trending_logs %}
+                        {% include 'includes/trending_logs.html' %}
+                    {% endif %}
                 </div>
             </div>
             {% endif %}

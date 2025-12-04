@@ -209,6 +209,14 @@
     {% include 'logs/partials/comment_section.html' with log=log home_feed=True%}
 
 </div>
+
+<!-- Nearby Developers (Mobile/Tablet Only - Local Tab) - After first batch of logs -->
+{% if forloop.counter == 7 and feed_type == 'local' and nearby_developers %}
+<div class="block min-[1110px]:hidden">
+    {% include 'includes/nearby_developers.html' %}
+</div>
+{% endif %}
+
 {% endfor %}
 
 {% if not feed_items %}
