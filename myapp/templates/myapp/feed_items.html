@@ -3,9 +3,7 @@
 {% load comment_tags %}
 
 {% for log in feed_items %}
-<div id="log-{{ log.sig }}" 
-     data-log-sig="{{ log.sig }}"
-     class="bg-[#151b23] border border-[#21262d] rounded-xl overflow-hidden hover:border-[#30363d] transition-all duration-200 shadow-lg relative {% if highlighted_log_sig == log.sig %}highlighted-from-{{ source }}{% endif %}">
+<div id="log-{{ log.sig }}" data-log-sig="{{ log.sig }}" class="bg-[#151b23] border border-[#21262d] rounded-xl overflow-hidden hover:border-[#30363d] transition-all duration-200 shadow-lg relative {% if highlighted_log_sig == log.sig %}highlighted-from-{{ source }}{% endif %}">
     
     <!-- Suggestion Label - Only for Secondary Network (LinkedIn/Instagram style) -->
     {% if log.recommendation_reason %}

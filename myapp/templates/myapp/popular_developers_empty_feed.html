@@ -1,0 +1,75 @@
+{% load static %}
+{% load custom_filter %}
+
+<!-- Popular Developers Cards for Empty Network Feed -->
+<div class="max-w-5xl mx-auto lg:mt-2 -mt-4 px-0">
+    <!-- Header -->
+    <div class="text-center mb-6 md:mb-8">
+        <p class="text-xl md:text-2xl font-normal text-gray-200 mb-2">Follow Active Developers</p>
+        <p class="text-gray-400 text-xs md:text-sm px-4">To get Started!</p>
+    </div>
+
+    <!-- Developer Cards Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3 md:gap-4">
+        {% for dev in populate_popular_developers %}
+        <div class="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden hover:border-gray-600 transition-all duration-200 shadow-sm flex flex-col relative group">
+         
+
+            <!-- Banner Area -->
+            <div class="h-14 md:h-16 w-full bg-[#21262d] relative overflow-hidden">
+                <!-- Abstract Pattern/Gradient for Banner -->
+                <div class="absolute inset-0 opacity-20" 
+                     style="background-image: radial-gradient(#30363d 1px, transparent 1px); background-size: 10px 10px;">
+                </div>
+            </div>
+
+            <!-- Profile Content -->
+            <div class="px-3 pb-4 flex flex-col items-center text-center -mt-8 md:-mt-10 relative z-10">
+                
+                <!-- Avatar -->
+                <a href="{% url 'user_profile' dev.user.username %}" class="relative">
+                    <img src="{{ dev.profile_image.url|default:'/static/assets/default-avatar.png' }}" 
+                         alt="{{ dev.user.username }}"
+                         class="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-[#161b22] bg-[#161b22]">
+                </a>
+
+                <!-- Name -->
+                <a href="{% url 'user_profile' dev.user.username %}" 
+                   class="mt-2 text-base md:text-lg font-light text-gray-200 hover:text-green-400 hover:underline decoration-green-400/50 underline-offset-2 transition-colors truncate w-full px-2">
+                    @{{ dev.user.username }}
+                </a>
+
+                <!-- Coding Style (Logo Only) -->
+                {% if dev.coding_style %}
+                <div class="mt-1.5 flex items-center justify-center h-5" title="{{ dev.coding_style.name }}">
+                    {% if dev.coding_style.logo %}
+                    <img src="{% static 'assets/coding-style-logo/' %}{{dev.coding_style.logo}}" alt="{{ dev.coding_style.name }}" class="h-5 w-auto object-contain opacity-90">
+                    {% else %}
+                    <i class="fa fa-code text-gray-500 text-sm"></i>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="mt-1.5 h-5"></div>
+                {% endif %}
+
+                <!-- Log Count (The "Metric") -->
+                <div class="mt-1 text-[12px] text-gray-400 font-mono">
+                    {{ dev.log_count }} log{{ dev.log_count|pluralize }} posted
+                </div>
+
+                <!-- Follow Button (Pill Shape) -->
+                <div class="mt-4 w-full px-2">
+                    <button onclick="quickFollowUser('{{ dev.user.username }}', this)" 
+                            data-username="{{ dev.user.username }}"
+                            data-following="false"
+                            class="quick-follow-btn w-full py-1.5 rounded-full bg-[#238636] text-white text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 group-hover:shadow-[0_0_10px_rgba(56,189,248,0.1)]">
+                        <i class="fa fa-plus text-xs"></i> Follow
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    
+</div>

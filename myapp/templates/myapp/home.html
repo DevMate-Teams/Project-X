@@ -114,9 +114,9 @@
                     </form>
 
                     <!-- Horizontal line with filter toggle at the end -->
-                    <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center justify-between">
                         <!-- Horizontal line -->
-                        <div class="flex-1 border-t border-gray-600"></div>
+                        <div class="flex-1 border-t border-gray-800"></div>
                         
                         <!-- Filter toggle at the end of the line -->
                         <div class="ml-4 flex items-center bg-[#1a1f2b]/80 border border-gray-700/50 rounded-lg p-0.5 backdrop-blur-sm">
@@ -141,17 +141,23 @@
                     </div>
 
                     {% if feed_items %}
-                        <div class="flex flex-col gap-y-6" id="feed-container">
+                        <div class="flex flex-col gap-y-6 lg:mt-2 -mt-4" id="feed-container">
                             {% include "myapp/feed_items.html" %}
                         </div>
                         <div id="loading" class="text-center my-4 hidden">
                             <span class="text-gray-500">Loading...</span>
                         </div>
                     {% else %}
-                        <div class='mt-4 flex flex-col gap-y-6 items-center mx-auto'>
-                            <img src='{% static "assets/no_feed.svg" %}' class='h-60 w-60'>
-                            <p class=''>No items in your feed yet!</p>
-                        </div>
+                        {% if populate_popular_developers %}
+                            <!-- Show popular developers for empty Network feed -->
+                            {% include "myapp/popular_developers_empty_feed.html" %}
+                        {% else %}
+                            <!-- Generic empty state for other feed types -->
+                            <div class='mt-4 flex flex-col gap-y-6 items-center mx-auto'>
+                                <img src='{% static "assets/no_feed.svg" %}' class='h-60 w-60'>
+                                <p class=''>No items in your feed yet!</p>
+                            </div>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>

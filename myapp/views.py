@@ -144,11 +144,19 @@ def home_page(request):
     print(feed_items)
     
     logform = LogForm()
+    
+    # Get popular developers for empty feed state (Network tab only)
+    popular_developers = []
+    if feed_type == 'network' and len(feed_items) == 0:
+        from .utils.popular_developers import get_popular_developers
+        popular_developers = get_popular_developers(request.user, limit=10)
+    
     context = {
         'logform': logform,
         'feed_items': feed_items,
         'feed_type': feed_type,
         'trending_logs': trending_logs,
+        'populate_popular_developers': popular_developers,
     }
 
     # User is authenticated and profile is complete
