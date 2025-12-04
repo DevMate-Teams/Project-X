@@ -1,5 +1,6 @@
 {% load static %}
 {% load custom_filter %}
+{% load comment_tags %}
 
 {% for log in logs %}
 <div class="bg-[#151b23] border border-[#21262d] rounded-lg p-4 hover:border-[#30363d] transition-all duration-200">
@@ -21,7 +22,7 @@
     <div class="space-y-3">
         <div class="flex items-start gap-2">
             <span class="text-green-400 mt-0.5 text-sm flex-shrink-0">&gt;_</span>
-            <p class="text-gray-200 text-sm leading-relaxed font-mono flex-1">{{ log.content }}</p>
+            <p class="text-gray-200 text-sm leading-relaxed font-mono flex-1">{{ log.content|parse_mentions }}</p>
         </div>
 
         <!-- Snapshot image -->
@@ -36,15 +37,15 @@
 
         <!-- Code snippet -->
         {% if log.code_snippet %}
-        <div class="relative bg-[#0a0e14] border border-[#21262d] rounded-md p-3 mt-3">
-            <div class="flex items-center justify-between mb-2">
+        <div class="relative code-snippet-container bg-[#0a0e14] border border-[#21262d] rounded-md mt-3">
+            <div class="flex items-center justify-between -mb-2 pt-3 px-3">
                 <span class="text-[10px] text-gray-500 font-mono uppercase tracking-wider">Code</span>
                 <button onclick="copySnippet('{{ log.sig }}')" 
                         class="text-gray-500 hover:text-green-400 transition-colors">
                     <i class="fa fa-copy text-xs"></i>
                 </button>
             </div>
-            <pre id="code-snippet-{{ log.sig }}" class="text-green-300 font-mono text-xs overflow-x-auto overflow-y-auto whitespace-pre-wrap break-words max-h-80"><code>{{ log.code_snippet }}</code></pre>
+            <pre id="code-snippet-{{ log.sig }}" class="m-0 overflow-x-auto overflow-y-auto max-h-90 text-xs leading-relaxed"><code class="font-mono">{{ log.code_snippet }}</code></pre>
         </div>
         {% endif %}
 

@@ -46,3 +46,24 @@ def call(obj, method_name):
         return method(*args)
     method = getattr(obj, method_name)
     return method()
+
+@register.filter
+def linkify_usernames(text):
+    """
+    Convert @username mentions in text to clickable profile links.
+    Example: "@john follows" becomes "<a href='/user-profile/john/'>@john</a> follows"
+    """
+    import re
+    from django.utils.safestring import mark_safe
+    
+    # Pattern to match @username (alphanumeric and underscores)
+    pattern = r'@(\w+)'
+    
+    def replace_mention(match):
+        username = match.group(1)
+        return f'<a href="/user-profile/{username}/" class="hover:underline">@{username}</a>'
+    
+    # Replace all @username mentions with links
+    linked_text = re.sub(pattern, replace_mention, text)
+    
+    return mark_safe(linked_text)

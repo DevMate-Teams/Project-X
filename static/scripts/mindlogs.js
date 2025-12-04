@@ -499,3 +499,73 @@ window.addComment = addComment;
 window.deleteComment = deleteComment;
 window.showReplyForm = showReplyForm;
 window.cancelReply = cancelReply;
+
+/**
+ * Quick follow/unfollow toggle for user from feed (for secondary network logs)
+ */
+function quickFollowUser(username, buttonElement) {
+  const btn = $(buttonElement);
+
+  // Prevent double-click
+  if (btn.prop('disabled')) return;
+
+  // Get current following state
+  const isCurrentlyFollowing = btn.data('following') === 'true' || btn.data('following') === true;
+
+  // Show loading state
+  const originalText = btn.html();
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+  $.ajax({
+    type: "POST",
+    url: "/api/quick-follow/",
+    contentType: "application/json",
+    data: JSON.stringify({
+      username: username
+    }),
+    headers: {
+      "X-CSRFToken": getCSRFToken()
+    },
+    success: function (response) {
+      if (response.status === "success") {
+        // Update button based on new follow status
+        if (response.is_following) {
+          // Now following - update to "Following" state
+          btn.html('<i class="fa fa-check"></i> Following')
+            .removeClass('bg-[#238636] hover:bg-[#2ea043] border-[rgba(240,246,252,0.1)] shadow-sm')
+            .addClass('bg-gray-700 text-gray-300 hover:bg-gray-600 border-gray-600')
+            .data('following', 'true')
+            .prop('disabled', false);
+        } else {
+          // Now not following - update to "Follow" state
+          btn.html('Follow')
+            .removeClass('bg-gray-700 text-gray-300 hover:bg-gray-600 border-gray-600')
+            .addClass('bg-[#238636] text-white hover:bg-[#2ea043] border-[rgba(240,246,252,0.1)] shadow-sm')
+            .data('following', 'false')
+            .prop('disabled', false);
+        }
+
+        // Optional: Show success message in console
+        console.log(response.message);
+      }
+    },
+    error: function (xhr) {
+      console.error('Error toggling follow:', xhr.responseText);
+
+      // Restore button
+      btn.html(originalText).prop('disabled', false);
+
+      // Show error message
+      let errorMsg = 'Failed to toggle follow status';
+      if (xhr.responseJSON && xhr.responseJSON.message) {
+        errorMsg = xhr.responseJSON.message;
+      }
+
+      // Visual feedback
+      alert(errorMsg);
+    }
+  });
+}
+
+// Export quick follow function
+window.quickFollowUser = quickFollowUser;

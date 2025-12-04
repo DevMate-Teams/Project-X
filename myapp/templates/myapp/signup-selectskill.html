@@ -3,52 +3,92 @@
 
 {% block title %}Select your Skills{% endblock  %}
 
-{% block style %}<link rel="stylesheet" href="{% static 'styles/user_profile_page.css' %}"/>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />{% endblock %}
-{% block body_class %}flex items-center justify-center min-h-screen bg-gray-100{% endblock %}
+{% block style %}
+<link rel="stylesheet" href="{% static 'styles/user_profile_page.css' %}"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<style>
+    /* Select2 Dark Theme Overrides */
+    .select2-container--default .select2-selection--multiple {
+        background-color: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 0.375rem; /* rounded-md */
+        min-height: 42px;
+    }
+    .select2-container--default.select2-container--focus .select2-selection--multiple {
+        border-color: #238636; /* focus ring color */
+        outline: none;
+        box-shadow: 0 0 0 2px #238636;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #238636;
+        border: 1px solid #2ea043;
+        color: white;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        color: #e6edf3;
+        margin-right: 5px;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+        color: white;
+    }
+    .select2-dropdown {
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        color: #c9d1d9;
+    }
+    .select2-results__option {
+        color: #ffffff;
+    }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #238636;
+        color: white;
+    }
+    .select2-container--default .select2-results__option[aria-selected=true] {
+        background-color: #21262d;
+        color: white;
+    }
+    .select2-search__field {
+        color: #c9d1d9 !important;
+        margin-top: 7px !important;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+        padding: 0 5px;
+    }
+</style>
+{% endblock %}
+
+{% block body_class %}bg-[#0d1117]{% endblock %}
 
 {% block content %} 
 
-    <div class="w-full mx-auto flex flex-col md:flex-col lg:flex-row max-[1300px]:flex-col items-center justify-center gap-8 px-4 md:px-2">
-        <img src="{% static 'assets/skills.jpeg' %}" alt="" class="h-72 hidden md:block">
-        <div class="bg-white p-8 pb-4 rounded-lg shadow-lg lg:w-[50%] md:w-[60%] w-full">
-            <p class="text-2xl font-bold text-center mb-8 text-gray-800">Select your Skills</p>
-    
-            {% comment %} <form action="#" method="POST" class="space-y-6">
-    
-                <!-- Required Skills -->
-                <div>
-                    <label class="block text-gray-700 font-medium mb-2">
-                        <i class="fas fa-tools mr-2"></i>Required Skills
-                    </label>
-                    <select id="mySelect"
-                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                        name="skills" multiple>
-                        <option value="JavaScript">JavaScript</option>
-                        <option value="Python">Python</option>
-                        <option value="React">React</option>
-                        <option value="Node.js">Node.js</option>
-                    </select>
+    <div class="min-h-screen flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8 font-sans text-[#c9d1d9]">
+        <div class="w-full max-w-2xl">
+            <div class="bg-[#161b22] p-8 rounded-lg shadow-lg border border-[#30363d]">
+                <div class="text-center mb-6">
+                    <i class="fas fa-tools text-5xl text-[#c9d1d9]"></i>
                 </div>
-    
-            </form> {% endcomment %}
+                <p class="text-2xl font-bold text-center mb-8 text-white">Select your Skills</p>
+        
+                <form method='POST' class="space-y-6">
+                    {% csrf_token %}
+                    <div>
+                        {{form.skills}}
+                    </div>
 
-            <form method='POST' class="space-y-4">
-                {% csrf_token %}
-                {{form.skills}}
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
-                    <!-- Skip Button -->
-                    <button type="submit"
-                        class="w-full sm:w-auto bg-white text-gray-700 border border-gray-400 px-4 py-3 rounded-lg cursor-pointer hover:bg-gray-100 transition duration-300">
-                        Skip 
-                    </button>
-                    <!-- Next Button -->
-                    <button type="submit"
-                        class="w-full sm:w-auto bg-black text-white px-4 py-3 rounded-lg hover:bg-gray-800 transition duration-300 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-                        <i class="fas fa-arrow-right mr-2"></i>Next
-                    </button>
-                </div>
-            </form>
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-4 border-t border-[#30363d]">
+                        <!-- Skip Button -->
+                        <button type="submit"
+                            class="w-full sm:w-auto bg-[#21262d] text-[#c9d1d9] border border-[#30363d] px-6 py-2.5 rounded-md cursor-pointer hover:bg-[#30363d] hover:text-white transition duration-300 text-sm font-medium">
+                            Skip 
+                        </button>
+                        <!-- Next Button -->
+                        <button type="submit"
+                            class="w-full sm:w-auto bg-[#238636] text-white px-6 py-2.5 rounded-md hover:bg-[#2ea043] transition duration-300 focus:outline-none focus:ring-2 focus:ring-[#238636] focus:ring-offset-2 focus:ring-offset-[#0d1117] text-sm font-medium shadow-sm border border-[rgba(240,246,252,0.1)]">
+                            Next <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -60,7 +100,6 @@
                 allowClear: true,
                 width: '100%'
             });
-
         });
     </script>
 

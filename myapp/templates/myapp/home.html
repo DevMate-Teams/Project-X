@@ -71,7 +71,7 @@
                                 <div class="bg-[#181c23] text-green-300 font-mono rounded-xl border border-gray-700 shadow-xl p-4">
                                     <textarea name="code_snippet"
                                             rows="10"
-                                            maxlength="5000"
+                                            maxlength="10000"
                                             placeholder="// Write your code here..."
                                             class="w-full bg-transparent focus:outline-none resize-y text-sm leading-relaxed font-mono text-green-300"
                                     ></textarea>
@@ -168,6 +168,7 @@
         </div>
 
         <script src="{% static 'scripts/mindlogs.js' %}"></script>
+        <script src="{% static 'scripts/feed-scroll.js' %}"></script>
         
         <!-- Log Highlighting Styles and Auto-Scroll -->
         {% if highlighted_log_sig %}

@@ -24,6 +24,7 @@ urlpatterns = [
     path("<str:username>/user-follow-list/", views.follow_list, name="follow_list"),
     path("unfollow/<int:otheruserinfo_id>/", views.unfollow_user, name = 'unfollow_user'),
     path("follow/<int:otheruserinfo_id>/", views.follow_user, name = 'follow_user'),
+    path("api/quick-follow/", views.quick_follow_user, name='quick_follow_user'),
 
     path('update-banner/', views.update_banner, name='update_banner'),
     path("settings/", views.settings_page, name="settings_page"),
@@ -39,4 +40,9 @@ urlpatterns = [
     path('notifications/mark-all-read/', views.mark_all_read, name='mark_all_read'),
     path('notifications/count/', views.get_notification_count_api, name='get_notification_count'),
     path('notifications/<int:notification_id>/mark-read/', views.mark_notification_read, name='mark_notification_read'),
+    
+    # Geolocation (for Local feed)
+    path('api/geolocation/update/', views.update_user_geolocation, name='update_geolocation'),
+    path('api/geolocation/status/', views.get_user_geolocation_status, name='geolocation_status'),
+    path('api/geolocation/ip-fallback/', views.trigger_ip_geolocation_fallback, name='geolocation_ip_fallback'),
 ]

@@ -20,7 +20,7 @@ class Log(models.Model):
     user = models.ForeignKey(userinfo, on_delete=models.CASCADE, related_name='mind_logs')
     content = models.TextField(max_length=255)
     snap_shot = models.ImageField(upload_to='log_snap_shot', blank=True, null=True)
-    code_snippet = models.TextField(max_length=5000, blank=True, null=True)
+    code_snippet = models.TextField(max_length=10000, blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     link = models.URLField(blank=True, null=True)
 
@@ -177,3 +177,32 @@ class Notification(models.Model):
         if not self.is_read:
             self.is_read = True
             self.save(update_fields=['is_read'])
+
+
+class LogViews(models.Model):
+    """
+    Tracks when users view logs for feed freshness calculation.
+    Used to down-weight already-viewed content in the feed.
+    """
+    user = models.ForeignKey(userinfo, on_delete=models.CASCADE, related_name='log_views')
+    log = models.ForeignKey(Log, on_delete=models.CASCADE, related_name='views')
+    viewed_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    view_count = models.PositiveIntegerField(default=1)  # Track multiple views
+    
+    class Meta:
+        unique_together = ['user', 'log']
+        ordering = ['-viewed_at']
+        indexes = [
+            models.Index(fields=['user', 'viewed_at']),
+            models.Index(fields=['user', 'log']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.user.username} viewed {self.log.sig}"
+    
+    def increment_view(self):
+        """Increment view count and update timestamp"""
+        from django.utils import timezone
+        self.view_count = F('view_count') + 1
+        self.viewed_at = timezone.now()
+        self.save(update_fields=['view_count', 'viewed_at'])

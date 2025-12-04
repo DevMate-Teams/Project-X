@@ -33,7 +33,7 @@ def parse_mentions(text):
         # Use Django's reverse() would be ideal but we need the username in the URL
         # So we'll construct it directly following the URL pattern
         profile_url = f'/user-profile/{username}/'
-        return f'<a href="{profile_url}" class="text-blue-400 hover:text-blue-300 transition-colors font-semibold">@{username}</a>'
+        return f'<a href="{profile_url}" class="text-green-500 hover:text-green-600 transition-colors font-semibold">@{username}</a>'
     
     result = re.sub(pattern, replace_mention, escaped_text)
     

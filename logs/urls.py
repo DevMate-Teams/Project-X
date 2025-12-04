@@ -10,4 +10,10 @@ urlpatterns = [
     
     path("load-more-profile-logs/<str:username>/", views.load_more_profile_logs, name="load_more_profile_logs"),
     
+    # Mention autocomplete API
+    path("api/users/search/", views.search_users_for_mention, name="search_users_for_mention"),
+    
+    # View tracking API for feed freshness
+    path("api/track-view/", views.track_log_view, name="track_log_view"),
+    path("api/track-views/", views.track_batch_log_views, name="track_batch_log_views"),
 ]

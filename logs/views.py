@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from .forms import LogForm, CommentForm
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from .models import Log, Reaction, Comment
 from .utils.streaks import get_24h_log_stats, streak_calculation, calculate_max_streak
 from django.contrib.auth.models import User
@@ -14,8 +14,9 @@ from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from collections import Counter, defaultdict
 from datetime import date, timedelta
-from django.db.models import Avg
+from django.db.models import Avg, Q
 from django.contrib import messages
+from myapp.models import userinfo
 
 def chunk_list(data, size):
     it = iter(data)
@@ -99,7 +100,7 @@ def save_log(request):
             log = logform.save(commit=False)
             log.user = request.user.info
             raw_snippet = request.POST.get('code_snippet', '').strip()
-            log.code_snippet = raw_snippet[:5000] if raw_snippet else None
+            log.code_snippet = raw_snippet[:10000] if raw_snippet else None
             log.link = request.POST.get('link', '').strip()
 
             log.save()
@@ -255,3 +256,172 @@ def delete_comment(request, comment_id):
     
     comment.delete()
     return JsonResponse({'success': True, 'deleted_count': total_deleted})
+
+
+@login_required
+@require_GET
+def search_users_for_mention(request):
+    """
+    API endpoint for @mention autocomplete.
+    Returns matching usernames as the user types.
+    """
+    query = request.GET.get('q', '').strip()
+    
+    if not query or len(query) < 1:
+        return JsonResponse({'users': []})
+    
+    # Search users by username, prioritizing:
+    # 1. Users the current user follows
+    # 2. Users who have interacted with the current user
+    # 3. All other matching users
+    
+    current_user = request.user.info
+    
+    # Get users matching the query
+    users = User.objects.filter(
+        Q(username__icontains=query) | 
+        Q(first_name__icontains=query) |
+        Q(last_name__icontains=query)
+    ).exclude(
+        id=request.user.id  # Exclude current user
+    ).select_related('info')[:15]
+    
+    # Get IDs of users the current user follows
+    following_ids = set(
+        current_user.following.values_list('following__user_id', flat=True)
+    )
+    
+    # Build result list with priority
+    result = []
+    for user in users:
+        try:
+            info = user.info
+            result.append({
+                'username': user.username,
+                'full_name': f"{user.first_name} {user.last_name}".strip() or user.username,
+                'profile_image': info.profile_image.url if info.profile_image else '/static/assets/default-avatar.png',
+                'is_following': user.id in following_ids,
+            })
+        except userinfo.DoesNotExist:
+            continue
+    
+    # Sort: followed users first, then alphabetically
+    result.sort(key=lambda x: (not x['is_following'], x['username'].lower()))
+    
+    return JsonResponse({'users': result[:10]})
+
+
+@login_required
+@require_POST
+def track_log_view(request):
+    """
+    Track when a user views a log in their feed.
+    Used for calculating feed freshness penalties.
+    
+    Expects POST data:
+    - log_sig: The signature of the log being viewed
+    """
+    import json
+    from .models import Log, LogViews
+    
+    try:
+        data = json.loads(request.body)
+        log_sig = data.get('log_sig')
+        
+        if not log_sig:
+            return JsonResponse({'error': 'log_sig required'}, status=400)
+        
+        log = Log.objects.get(sig=log_sig)
+        user = request.user.info
+        
+        # Create or update the view record
+        log_view, created = LogViews.objects.get_or_create(
+            user=user,
+            log=log
+        )
+        
+        if not created:
+            # Increment view count for existing record
+            log_view.increment_view()
+        
+        return JsonResponse({
+            'success': True,
+            'created': created,
+            'view_count': log_view.view_count
+        })
+        
+    except Log.DoesNotExist:
+        return JsonResponse({'error': 'Log not found'}, status=404)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def track_batch_log_views(request):
+    """
+    Track multiple log views in a single request (more efficient).
+    
+    Expects POST data:
+    - log_sigs: Array of log signatures being viewed
+    """
+    import json
+    from .models import Log, LogViews
+    from django.utils import timezone
+    
+    try:
+        data = json.loads(request.body)
+        log_sigs = data.get('log_sigs', [])
+        
+        if not log_sigs:
+            return JsonResponse({'error': 'log_sigs required'}, status=400)
+        
+        user = request.user.info
+        
+        # Get all logs by signature
+        logs = Log.objects.filter(sig__in=log_sigs)
+        log_map = {log.sig: log for log in logs}
+        
+        # Get existing views for these logs
+        existing_views = LogViews.objects.filter(
+            user=user,
+            log__in=logs
+        ).select_related('log')
+        existing_view_map = {view.log.sig: view for view in existing_views}
+        
+        created_count = 0
+        updated_count = 0
+        
+        for sig in log_sigs:
+            if sig not in log_map:
+                continue  # Log doesn't exist
+            
+            if sig in existing_view_map:
+                # Increment view count and update timestamp
+                view = existing_view_map[sig]
+                view.view_count += 1
+                view.viewed_at = timezone.now()
+                view.save(update_fields=['view_count', 'viewed_at'])
+                updated_count += 1
+            else:
+                # Create new view
+                LogViews.objects.create(
+                    user=user,
+                    log=log_map[sig]
+                )
+                created_count += 1
+        
+        return JsonResponse({
+            'success': True,
+            'created': created_count,
+            'updated': updated_count,
+            'total': created_count + updated_count
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+

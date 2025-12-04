@@ -141,6 +141,7 @@ def home_page(request):
     # Fetch trending logs (What's Hot Now)
     from logs.utils.trending import get_trending_logs
     trending_logs = get_trending_logs(limit=5, hours=24)
+    print(feed_items)
     
     logform = LogForm()
     context = {
@@ -433,6 +434,64 @@ def follow_user(request, otheruserinfo_id):
         user.follow(otheruser)
         return JsonResponse({"status": "followed", "message": "User followed successfully.", 'followers_count': otheruser.get_followers().count(), 'following_count': otheruser.get_following().count()})
     return JsonResponse({"status": "error", "message": "Invalid request."}, status=400)
+
+@login_required
+@require_POST
+def quick_follow_user(request):
+    """
+    AJAX endpoint for quick follow/unfollow toggle from feed.
+    Accepts username in POST data.
+    Returns current follow status after toggle.
+    """
+    import json
+    
+    try:
+        data = json.loads(request.body)
+        target_username = data.get('username')
+        
+        if not target_username:
+            return JsonResponse({"status": "error", "message": "Username required."}, status=400)
+        
+        # Get target user
+        try:
+            target_user = userinfo.objects.select_related('user').get(user__username=target_username)
+        except userinfo.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "User not found."}, status=404)
+        
+        current_user = request.user.info
+        
+        # Prevent self-follow
+        if current_user == target_user:
+            return JsonResponse({"status": "error", "message": "Cannot follow yourself."}, status=400)
+        
+        # Check current follow status and toggle
+        is_following = current_user.is_following(target_user)
+        
+        if is_following:
+            # Unfollow
+            current_user.unfollow(target_user)
+            return JsonResponse({
+                "status": "success",
+                "action": "unfollowed",
+                "is_following": False,
+                "message": f"You unfollowed @{target_username}",
+                "username": target_username
+            })
+        else:
+            # Follow
+            current_user.follow(target_user)
+            return JsonResponse({
+                "status": "success",
+                "action": "followed",
+                "is_following": True,
+                "message": f"You are now following @{target_username}",
+                "username": target_username
+            })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({"status": "error", "message": "Invalid JSON data."}, status=400)
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
     
 @login_required
 def follow_list(request, username):
@@ -907,3 +966,149 @@ def load_more_notifications(request):
         'next_page': notifications.next_page_number() if notifications.has_next() else None,
         'current_page': notifications.number
     })
+
+
+# ============= GEOLOCATION VIEWS =============
+
+@login_required
+@require_POST
+def update_user_geolocation(request):
+    """
+    Update user's latitude/longitude from browser Geolocation API.
+    This provides accurate location for the Local feed algorithm.
+    
+    Expected POST data:
+    - latitude: float
+    - longitude: float
+    """
+    import json
+    from .utils.geolocation import update_user_location_from_browser
+    
+    try:
+        data = json.loads(request.body)
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        
+        if latitude is None or longitude is None:
+            return JsonResponse({
+                'success': False,
+                'error': 'Missing latitude or longitude'
+            }, status=400)
+        
+        # Validate coordinates
+        try:
+            lat = float(latitude)
+            lon = float(longitude)
+            
+            if not (-90 <= lat <= 90):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid latitude (must be -90 to 90)'
+                }, status=400)
+            
+            if not (-180 <= lon <= 180):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid longitude (must be -180 to 180)'
+                }, status=400)
+                
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid coordinate format'
+            }, status=400)
+        
+        success = update_user_location_from_browser(request.user.info, lat, lon)
+        
+        if success:
+            return JsonResponse({
+                'success': True,
+                'message': 'Location updated successfully'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to update location'
+            }, status=500)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+def get_user_geolocation_status(request):
+    """
+    Get current user's geolocation status.
+    Returns whether coordinates are set, their values, and if browser refresh is needed.
+    """
+    from .utils.geolocation import should_request_browser_location
+    
+    user_info = request.user.info
+    
+    has_location = bool(user_info.latitude and user_info.longitude)
+    needs_refresh = should_request_browser_location(user_info)
+    
+    return JsonResponse({
+        'has_location': has_location,
+        'needs_refresh': needs_refresh,
+        'latitude': float(user_info.latitude) if user_info.latitude else None,
+        'longitude': float(user_info.longitude) if user_info.longitude else None,
+        'city': user_info.city,
+        'state': user_info.state,
+        'country': user_info.country,
+        'ip_updated_at': user_info.location_ip_updated_at.isoformat() if user_info.location_ip_updated_at else None,
+        'browser_updated_at': user_info.location_browser_updated_at.isoformat() if user_info.location_browser_updated_at else None,
+    })
+
+
+@login_required
+@require_POST
+def trigger_ip_geolocation_fallback(request):
+    """
+    Fallback endpoint to trigger IP-based geolocation when browser permission is denied.
+    
+    Called by JavaScript when:
+    - User denies browser geolocation permission
+    - Browser geolocation API fails
+    - navigator.geolocation is not available
+    
+    This ensures users still get location-based features even without browser permission.
+    Forces an IP geolocation update regardless of staleness.
+    """
+    from .utils.geolocation import update_user_location_from_ip
+    
+    try:
+        user_info = request.user.info
+        
+        # Force IP-based geolocation update (ignore staleness check)
+        success = update_user_location_from_ip(user_info, request, force=True)
+        
+        if success:
+            return JsonResponse({
+                'success': True,
+                'message': 'Location set via IP fallback',
+                'latitude': float(user_info.latitude) if user_info.latitude else None,
+                'longitude': float(user_info.longitude) if user_info.longitude else None,
+                'city': user_info.city,
+                'state': user_info.state,
+                'country': user_info.country,
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Could not determine location from IP address'
+            }, status=500)
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

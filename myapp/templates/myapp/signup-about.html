@@ -3,106 +3,113 @@
 
 {% block title %}Tell more about yourself...{% endblock  %}
 
-{% block style %}<link rel="stylesheet" href="{% static 'styles/user_profile_page.css' %}"/>{% endblock %}
-{% block body_class %}flex items-center justify-center min-h-screen bg-gray-100{% endblock %}
+{% block body_class %}bg-[#0d1117]{% endblock %}
 
 {% block content %} 
 
-    <div class="w-full mx-auto flex max-[1300px]:flex-col items-center justify-center gap-8 px-4 md:px-2">
-        <img src="{% static 'assets/sad1.svg' %}" alt="" class="w-full mt-20 md:mt-0 md:h-96 md:w-auto md:block hidden">
-        <div class="bg-white p-8 rounded-lg shadow-lg w-full md:w-4/5 lg:w-[700px]">
-            <p class="text-2xl font-bold text-center mb-6 text-gray-800">Tell us about yourself</p>
-
-            <form action="" method="POST" class="space-y-6">
-                {% csrf_token %}
-                <!-- About Yourself -->
-                <div>
-                    <label class="block text-gray-700 font-medium mb-2">
-                        <i class="fas fa-user mr-2"></i>Describe Yourself
-                    </label>
-                    <textarea
-                        class="w-full p-3 border rounded-lg h-40 resize-none focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                        placeholder="About Yourself..."
-                        name="bio"
-                        maxlength="1000"
-                        id="bioTextarea"
-                        oninput="updateCharCount(this)">
-                    </textarea>
-                    <p id="charCount" class="text-sm text-gray-500 mt-1">0/1000 characters</p>
+    <div class="min-h-screen flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8 font-sans text-[#c9d1d9]">
+        <div class="w-full max-w-2xl">
+            <div class="bg-[#161b22] p-8 rounded-lg shadow-lg border border-[#30363d]">
+                <div class="text-center mb-6">
+                    <i class="fas fa-fingerprint text-5xl text-[#c9d1d9]"></i>
                 </div>
-                                              
-                <!-- GitHub URL -->
-                <div>
-                    <label class="block text-gray-700 font-medium mb-2">
-                        <i class="fab fa-github mr-2"></i>GitHub URL
-                    </label>
-                    <input type="url"
-                        class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                        placeholder="https://github.com/username" name="github">
-                </div>
+                <p class="text-2xl font-semibold text-center mb-8 text-white">Tell us about yourself</p>
 
-                <!-- LinkedIn URL -->
-                <div>
-                    <label class="block text-gray-700 font-medium mb-2">
-                        <i class="fab fa-linkedin mr-2"></i>LinkedIn URL
-                    </label>
-                    <input type="url"
-                        class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                        placeholder="https://linkedin.com/in/username" name="linkedin">
-                </div>
+                <form action="" method="POST" class="space-y-6">
+                    {% csrf_token %}
+                    <!-- About Yourself -->
+                    <div>
+                        <label class="block text-[#c9d1d9] font-medium mb-2">
+                            <i class="fas fa-user mr-2 text-[#8b949e]"></i>Describe Yourself
+                        </label>
+                        <textarea
+                            class="w-full p-3 bg-[#0d1117] border border-[#30363d] rounded-md text-[#c9d1d9] placeholder-[#8b949e] h-40 resize-none focus:outline-none focus:ring-2 focus:ring-[#238636] focus:border-transparent transition-all"
+                            placeholder="About Yourself..."
+                            name="bio"
+                            maxlength="1000"
+                            id="bioTextarea"
+                            oninput="updateCharCount(this)">
+                        </textarea>
+                        <p id="charCount" class="text-xs text-[#8b949e] mt-2 text-right">0/1000 characters</p>
+                    </div>
+                                                  
+                    <!-- GitHub URL -->
+                    <div>
+                        <label class="block text-[#c9d1d9] font-medium mb-2">
+                            <i class="fab fa-github mr-2 text-[#8b949e]"></i>GitHub URL
+                        </label>
+                        <input type="url"
+                            class="w-full p-3 bg-[#0d1117] border border-[#30363d] rounded-md text-[#c9d1d9] placeholder-[#8b949e] focus:outline-none focus:ring-2 focus:ring-[#238636] focus:border-transparent transition-all"
+                            placeholder="https://github.com/username" name="github">
+                    </div>
 
-                <!-- Stack Overflow URL -->
-                <div>
-                    <label class="block text-gray-700 font-medium mb-2">
-                        <i class="fab fa-stack-overflow mr-2"></i>Stack Overflow URL
-                    </label>
-                    <input type="url"
-                        class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                        placeholder="https://stackoverflow.com/users/username" name="stackoverflow">
-                </div>
+                    <!-- LinkedIn URL -->
+                    <div>
+                        <label class="block text-[#c9d1d9] font-medium mb-2">
+                            <i class="fab fa-linkedin mr-2 text-[#8b949e]"></i>LinkedIn URL
+                        </label>
+                        <input type="url"
+                            class="w-full p-3 bg-[#0d1117] border border-[#30363d] rounded-md text-[#c9d1d9] placeholder-[#8b949e] focus:outline-none focus:ring-2 focus:ring-[#238636] focus:border-transparent transition-all"
+                            placeholder="https://linkedin.com/in/username" name="linkedin">
+                    </div>
 
-                <!-- Website URL -->                    
-                <div>
-                    <label class="block text-gray-700 font-medium mb-2">
-                        <i class="fas fa-globe mr-2"></i>Website URL
-                    </label>
-                    <input type="url"RL
+                    <!-- Stack Overflow URL -->
+                    <div>
+                        <label class="block text-[#c9d1d9] font-medium mb-2">
+                            <i class="fab fa-stack-overflow mr-2 text-[#8b949e]"></i>Stack Overflow URL
+                        </label>
+                        <input type="url"
+                            class="w-full p-3 bg-[#0d1117] border border-[#30363d] rounded-md text-[#c9d1d9] placeholder-[#8b949e] focus:outline-none focus:ring-2 focus:ring-[#238636] focus:border-transparent transition-all"
+                            placeholder="https://stackoverflow.com/users/username" name="stackoverflow">
+                    </div>
 
-                        class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                        placeholder="https://yourwebsite.com" name="website">
-                </div>
+                    <!-- Website URL -->                    
+                    <div>
+                        <label class="block text-[#c9d1d9] font-medium mb-2">
+                            <i class="fas fa-globe mr-2 text-[#8b949e]"></i>Website URL
+                        </label>
+                        <input type="url"
+                            class="w-full p-3 bg-[#0d1117] border border-[#30363d] rounded-md text-[#c9d1d9] placeholder-[#8b949e] focus:outline-none focus:ring-2 focus:ring-[#238636] focus:border-transparent transition-all"
+                            placeholder="https://yourwebsite.com" name="website">
+                    </div>
 
-                <!-- Submit Button -->
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mt-8">
-                    <!-- Skip Button -->
-                    <button type="submit"
-                        class="w-full sm:w-auto bg-white text-gray-700 border border-gray-400 px-4 py-3 rounded-lg cursor-pointer hover:bg-gray-100 transition duration-300">
-                        Skip 
-                    </button>
-                    <!-- Next Button -->
-                    <button type="submit"
-                        class="w-full sm:w-auto bg-black text-white px-4 py-3 rounded-lg hover:bg-gray-800 transition duration-300 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-                        <i class="fas fa-arrow-right mr-2"></i>Next
-                    </button>
-                </div>
+                    <!-- Submit Button -->
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-4 border-t border-[#30363d]">
+                        <!-- Skip Button -->
+                        <button type="submit"
+                            class="w-full sm:w-auto bg-[#21262d] text-[#c9d1d9] border border-[#30363d] px-6 py-2.5 rounded-md cursor-pointer hover:bg-[#30363d] hover:text-white transition duration-300 text-sm font-medium">
+                            Skip 
+                        </button>
+                        <!-- Next Button -->
+                        <button type="submit"
+                            class="w-full sm:w-auto bg-[#238636] text-white px-6 py-2.5 rounded-md hover:bg-[#2ea043] transition duration-300 focus:outline-none focus:ring-2 focus:ring-[#238636] focus:ring-offset-2 focus:ring-offset-[#0d1117] text-sm font-medium shadow-sm border border-[rgba(240,246,252,0.1)]">
+                            Next <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
 
-            </form>
+                </form>
+            </div>
         </div>
     </div>
     
     <script>
         window.onload = function() {
             const textarea = document.getElementById('bioTextarea');
-            // Ensure no extra whitespace at the start
-            textarea.value = textarea.value.trim();
-            updateCharCount(textarea);
+            if(textarea) {
+                // Ensure no extra whitespace at the start
+                textarea.value = textarea.value.trim();
+                updateCharCount(textarea);
+            }
         };
     
         // Update the character count
         function updateCharCount(textarea) {
             // Ensure there are no invisible characters like whitespace affecting the count
             const count = textarea.value.trim().length;
-            document.getElementById('charCount').textContent = `${count}/1000 characters`;
+            const countDisplay = document.getElementById('charCount');
+            if(countDisplay) {
+                countDisplay.textContent = `${count}/1000 characters`;
+            }
         }
     </script>
         

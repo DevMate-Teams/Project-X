@@ -6,63 +6,49 @@
 {% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8 bg-gray-900">
-    <div class="w-full max-w-md sm:max-w-lg bg-white shadow-2xl rounded-2xl p-6 sm:p-8 border border-[#1f1f1f] transform transition-all duration-500 ease-in-out animate-fade-in-up">
+<div class="min-h-screen bg-[#0d1117] flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8 font-sans text-[#c9d1d9]">
+    <div class="mx-auto w-full max-w-lg sm:max-w-md">
+        <div class="bg-[#161b22] py-6 sm:py-8 px-4 sm:px-6 shadow sm:rounded-lg border border-[#30363d]">
+            
+            <!-- Heading -->
+            <div class="text-center mb-6">
+                <p class="text-2xl mt-2 font-normal text-white mb-2">
+                    Verify Your Email Address
+                </p>
+            </div>
 
-        <!-- Heading -->
-        <p class="text-2xl sm:text-3xl font-bold text-green-600 mb-4 sm:mb-6 text-center tracking-tight">
-            Verify Your Email Address
-        </p>
+            <!-- Message -->
+            <p class="text-[#8b949e] text-center text-sm sm:text-base leading-relaxed mb-6">
+                Verification email sent to Your Email Address! Click the link to complete signup. 
+                <br><span class="font-semibold text-white">Check spam/junk</span> if you don't see it.
+            </p>
 
-        <!-- Message -->
-        <p class="text-gray-800 mb-4 text-sm sm:text-base leading-relaxed text-center">
-            Verification email sent to Your Email Address! Click the link to complete signup. 
-            <br><span class="font-semibold underline">Check spam/junk</span> if you don't see it.
-        </p>
+            <!-- Divider -->
+            <div class="border-t border-[#30363d] my-6"></div>
 
-        <!-- Divider -->
-        <div class="border-t border-gray-200 my-4 sm:my-6"></div>
+            <!-- Action Links -->
+            <div class="text-[#8b949e] text-sm text-center leading-normal font-medium py-2">
+                Didn’t get it? 
+                <a href="{% url 'account_email' %}" class="text-[#238636] hover:underline font-semibold transition-colors duration-300">
+                    Change your email
+                </a> 
+                or 
+                <form method="post" action="{% url 'account_logout' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="text-red-500 cursor-pointer hover:underline font-semibold transition-colors duration-300 bg-transparent border-none p-0">
+                        Logout
+                    </button>
+                </form>
+            </div>
 
-        <!-- Action Links -->
-        <div class="text-gray-500 text-xs sm:text-sm text-center leading-normal font-medium py-2">
-            Didn’t get it? 
-            <a href="{% url 'account_email' %}" class="text-green-600 font-semibold transition-colors duration-300 relative group">
-                Change your email
-                <span class="absolute bottom-0 left-0 w-0 h-[1px] bg-[#22c55e] transition-all duration-300 group-hover:w-full"></span>
-            </a> 
-            or 
-            <form method="post" action="{% url 'account_logout' %}" class="inline">
-                {% csrf_token %}
-                <button type="submit" class="text-[#f87171] cursor-pointer hover:text-[#ef4444] font-semibold transition-colors duration-300 relative group bg-transparent border-none p-0">
-                    Logout
-                    <span class="absolute bottom-0 left-0 w-0 h-[1px] bg-[#ef4444] transition-all duration-300 group-hover:w-full"></span>
-                </button>
-            </form>.
-        </div>
-
-        <!-- Back to Login Link -->
-        <div class="mt-6 text-center">
-            <a href="{% url 'account_login' %}" class="text-gray-600 hover:underline hover:text-green-600 text-xs sm:text-sm transition-colors duration-300">
-                Back to Login
-            </a>
+            <!-- Back to Login Button -->
+            <div class="mt-8 text-center">
+                <a href="{% url 'account_login' %}" 
+                   class="inline-flex items-center justify-center w-full px-4 py-2 bg-[#238636] hover:bg-[#2ea043] text-white text-sm font-medium rounded-md border border-[rgba(240,246,252,0.1)] shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#238636] focus:ring-offset-2 focus:ring-offset-[#0d1117]">
+                    Back to Login
+                </a>
+            </div>
         </div>
     </div>
 </div>
-
-<style>
-    /* Custom Animation for Fade-In-Up */
-    @keyframes fade-in-up {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    .animate-fade-in-up {
-        animation: fade-in-up 0.5s ease-in-out forwards;
-    }
-</style>
 {% endblock %}

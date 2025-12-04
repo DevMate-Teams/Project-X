@@ -89,11 +89,8 @@ class RegistrationForm(UserCreationForm):
 class Postsignup_infoForm(forms.ModelForm):
     class Meta:
         model = userinfo
-        fields = ['status', 'coding_style', 'timezone']
+        fields = ['status', 'timezone']
         widgets = {
-            'coding_style': forms.Select(attrs={
-                'class': 'w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent'
-            }),
             'status': forms.Select(attrs={
                 'class': 'w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent'
             }),
@@ -118,7 +115,7 @@ class EditProfileForm(forms.ModelForm):
     
     class Meta:
         model = userinfo
-        exclude = ['user', 'years_of_experience', 'skills', 'profile_views', 'updated_at', 'needs_profile_completion', 'last_seen', 'timezone', 'coding_style']
+        exclude = ['user', 'years_of_experience', 'skills', 'profile_views', 'updated_at', 'needs_profile_completion', 'last_seen', 'timezone', 'coding_style', 'latitude', 'longitude']
         
         widgets = {
             'bio': forms.Textarea(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Bio...', 'rows': 7,'cols': 40,}),
