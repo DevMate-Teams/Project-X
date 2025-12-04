@@ -24,11 +24,12 @@
 {% block content %} 
 
     <!-- main section -->
-    <div id = 'entireSection' class="flex flex-col lg:flex-row lg:w-full lg:gap-x-1 md:justify-start md:items-start justify-between">
+    <div id = 'entireSection' class="flex flex-col lg:flex-row w-full min-h-screen bg-[#010409] lg:justify-between lg:items-start">
         <!-- sidenav -->
         {% include "includes/sidenav.html" %}
 
-        <aside class="order-1 lg:order-3 border-l border-[#2d323b] border-b rounded-md border-opacity-80 w-full lg:w-[36%] p-6 space-y-6">
+        <!-- Right aside -->
+        <aside class="order-1 lg:order-3 w-full lg:w-[32%] shrink-0 p-6 lg:pb-10 space-y-6 border-l border-[#2d323b] border-b rounded-lg bg-[#010409]">
             <!-- Profile Card -->
             <div class="relative bg-[#1a1f2b] mt-2 group">
                 <!-- Banner -->
@@ -91,9 +92,9 @@
             <div class="pt-8 flex flex-col gap-y-2">
 
                 <!-- Name -->
-                <h2 class="text-2xl font-bold text-white tracking-tight">
+                <p class="text-2xl mt-2 lg:mt-4 font-bold text-white tracking-tight">
                     {{userinfo_obj.user.first_name}} {{userinfo_obj.user.last_name}}
-                </h2>
+                </p>
 
                 <!-- Username + Join Date -->
                 <p class="text-sm text-gray-300">
@@ -229,10 +230,10 @@
 
 
         <!-- Center Main Content -->
-        <main class="order-2 lg:order-2 w-full lg:w-[52%] mb-12 px-4 lg:px-6 py-6 space-y-6 overflow-y-auto">
-            <!-- Tab Switcher -->
-            <div class="flex flex-wrap gap-4 w-full justify-start lg:mt-6 -mt-1 sm:justify-center">
-            
+        <main class="order-2 lg:order-2 lg:w-[54%] mb-12 px-2 sm:px-16 lg:px-1 py-6 space-y-6 overflow-y-auto">
+                <!-- Tab Switcher -->
+                <div class="flex flex-wrap gap-4 w-full justify-start lg:mt-6 -mt-1 sm:justify-center">
+                
                 <!-- Active Tab Button -->
                 <a href="?section=overview" 
                     class="flex items-center gap-2 px-4 py-2.5 rounded-xl {% if section == '' or section == 'overview' or section == none %}text-white bg-gradient-to-br from-green-600 to-green-900{% else %} text-gray-400 bg-[#1a1f29] border border-[#2d323b] hover:text-white hover:border-indigo-400{% endif %} shadow-md transition-all duration-200">
