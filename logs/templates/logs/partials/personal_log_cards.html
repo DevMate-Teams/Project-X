@@ -3,7 +3,7 @@
 {% load comment_tags %}
 
 {% for log in logs %}
-<div class="bg-[#151b23] border border-[#21262d] rounded-lg p-4 hover:border-[#30363d] transition-all duration-200">
+<div class="bg-[#151b23] border border-[#21262d] rounded-lg p-4 hover:border-[#30363d] transition-all duration-200" id='log-{{ log.sig }}'>
     
     <!-- Header with timestamp -->
     <div class="flex items-center justify-between mb-3">

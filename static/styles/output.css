@@ -2482,6 +2482,9 @@
   .ring-\[\#2ea043\]\/10 {
     --tw-ring-color: color-mix(in oklab, #2ea043 10%, transparent);
   }
+  .ring-\[\#58a6ff\] {
+    --tw-ring-color: #58a6ff;
+  }
   .ring-\[\#30363d\] {
     --tw-ring-color: #30363d;
   }
@@ -2502,6 +2505,13 @@
     @supports (color: color-mix(in lab, red, red)) {
       --tw-ring-color: color-mix(in oklab, var(--color-white) 10%, transparent);
     }
+  }
+  .ring-offset-2 {
+    --tw-ring-offset-width: 2px;
+    --tw-ring-offset-shadow: var(--tw-ring-inset,) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  }
+  .ring-offset-\[\#010409\] {
+    --tw-ring-offset-color: #010409;
   }
   .outline {
     outline-style: var(--tw-outline-style);

@@ -116,7 +116,11 @@ def save_log(request):
                 request.session['reward_emojis'] = ['🥳', '🔥']
             else: 
                 messages.success(request, "Log committed successfully!")
-            return redirect("index")
+            
+            # Redirect to profile page with log anchor for auto-scroll
+            from django.urls import reverse
+            profile_url = reverse('user_profile', kwargs={'user_name': request.user.username})
+            return redirect(f"{profile_url}#log-{log.sig}")
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
 @login_required
