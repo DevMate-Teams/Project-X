@@ -5,6 +5,7 @@ set -o errexit
 
 # Install Python dependencies
 pip install -r requirements.txt
+pip install --upgrade pip # Upgrade pip to the latest version
 
 # Install Node.js dependencies for Tailwind CSS
 npm install

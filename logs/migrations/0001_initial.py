@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('timestamp', models.DateTimeField(auto_now_add=True, db_index=True)),
                 ('sig', models.CharField(default=logs.models.generate_unique_signature, max_length=20, unique=True)),
                 ('clone_count', models.PositiveIntegerField(default=0)),
-                ('original_log', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='clones', to='logs.log')),
+                ('original_log', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='clones', to='logs.mindlog')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='mind_logs', to='myapp.userinfo')),
             ],
         ),

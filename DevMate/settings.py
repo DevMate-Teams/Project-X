@@ -220,7 +220,7 @@ else:
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024 # 5 MB limit for uploads
 
 LOGIN_REDIRECT_URL = '/post-login-check/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
@@ -234,6 +234,10 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'  #Use email for authentication
 
 ACCOUNT_USERNAME_REQUIRED = True  # Default is True, so this is optional
 ACCOUNT_USERNAME_MIN_LENGTH = 3
+
+# # Modern django-allauth settings (replaces deprecated settings)
+ACCOUNT_LOGIN_METHODS = {'email'}  # Use email for authentication (replaces ACCOUNT_AUTHENTICATION_METHOD)
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']  # Required signup fields
 
 SOCIALACCOUNT_LOGIN_ON_GET = True 
 

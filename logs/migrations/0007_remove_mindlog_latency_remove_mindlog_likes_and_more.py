@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
                 ('content', models.TextField(max_length=500)),
                 ('timestamp', models.DateTimeField(auto_now_add=True, db_index=True)),
                 ('likes', models.ManyToManyField(blank=True, related_name='liked_logs_comments', to='myapp.userinfo')),
-                ('mindlog', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='logs.log')),
+                ('mindlog', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='logs.mindlog')),
                 ('parent_comment', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='replies', to='logs.comment')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='mindlog_comments', to='myapp.userinfo')),
             ],
@@ -55,7 +55,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('emoji', models.CharField(choices=[('👍', 'Like'), ('🔥', 'Fire'), ('🚀', 'Ship It'), ('❤️', 'Love'), ('💡', 'Insight'), ('🐛', 'Bug')], max_length=10)),
                 ('timestamp', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('mindlog', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reactions', to='logs.log')),
+                ('mindlog', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reactions', to='logs.mindlog')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='mindlog_reactions', to='myapp.userinfo')),
             ],
             options={
