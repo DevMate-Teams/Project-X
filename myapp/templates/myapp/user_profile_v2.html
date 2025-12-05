@@ -538,6 +538,47 @@
     </script>
     {% endif %}
 
+    <!-- Auto-scroll to newly created log -->
+    <script>
+        // Scroll to log if hash is present (after creating new log)
+        document.addEventListener('DOMContentLoaded', function() {
+            const hash = window.location.hash;
+            
+            if (hash && hash.startsWith('#log-')) {
+                // Small delay to ensure DOM is fully rendered
+                setTimeout(function() {
+                    const targetElement = document.querySelector(hash);
+                    
+                    if (targetElement) {
+                        // Calculate offset to position log nicely in viewport
+                        const offset = 100; // pixels from top
+                        const elementPosition = targetElement.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - offset;
+                        
+                        // Smooth scroll without effects
+                        window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                        });
+                        
+                        // Brief highlight to draw attention
+                        targetElement.style.transition = 'border-color 0.5s ease';
+                        targetElement.style.borderColor = '#58a6ff';
+                        
+                        setTimeout(function() {
+                            targetElement.style.borderColor = '';
+                        }, 1500);
+                        
+                        // Clean URL (remove hash after scrolling)
+                        setTimeout(function() {
+                            history.replaceState(null, null, window.location.pathname);
+                        }, 2000);
+                    }
+                }, 100);
+            }
+        });
+    </script>
+
     <script>
         // Heatmap tooltip functions - for fixed-position tooltip
         function showTooltip(event) {
