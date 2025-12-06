@@ -262,13 +262,9 @@ if DEBUG:
     # Global Feed Algorithm Toggle (Early-Stage Mode) True = Recency-Focused, False = Engagement-Focused
     GLOBAL_FEED_USE_RECENCY_MODE = config('GLOBAL_FEED_USE_RECENCY_MODE', cast=bool, default=True)
 else:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp-relay.brevo.com'
-
-    EMAIL_PORT = config('EMAIL_PORT', cast=int)
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+    # Brevo HTTP API Email Backend (Production)
+    EMAIL_BACKEND = 'helpers.brevo.brevo_backend.BrevoEmailBackend'
+    BREVO_API_KEY = config('BREVO_API_KEY', default='your-brevo-api-key-here')
     DEFAULT_FROM_EMAIL = "DevMate Space <admin@devmate.space>"
 
 # Logging
