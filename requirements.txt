@@ -12,15 +12,12 @@ Django==6.0
 django-admin-honeypot @ git+https://github.com/dmpayton/django-admin-honeypot@a840496d183df89965eeb33c9a5dd9ea3919dfff
 django-allauth==65.3.1
 django-appconf==1.1.0
-django-cors-headers==4.7.0
 django-environ==0.12.0
 django-ipware==7.0.1
 django-phonenumber-field==8.0.0
 django-select2==8.3.0
 django-storages==1.14.6
 django-widget-tweaks==1.5.0
-djangorestframework==3.16.0
-djangorestframework_simplejwt==5.5.0
 gunicorn==23.0.0
 idna==3.10
 iniconfig==2.3.0

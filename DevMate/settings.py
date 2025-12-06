@@ -57,9 +57,6 @@ INSTALLED_APPS = [
     'django_select2',
     'storages',
     'admin_honeypot',
-    'corsheaders',  # For CORS
-    'rest_framework',  # For DRF
-    'rest_framework_simplejwt',
     
     'myapp',
     'logs',
@@ -74,14 +71,7 @@ REST_FRAMEWORK = {
     ),
 }
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=180),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
-    'AUTH_HEADER_TYPES': ('Bearer',),
-}
-
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -95,9 +85,6 @@ MIDDLEWARE = [
     "myapp.middleware.AutoGeolocationMiddleware",  # Auto-detect location from IP
     "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
-
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS').split(",")
-CORS_ALLOW_CREDENTIALS = True
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default backend
@@ -163,7 +150,6 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
-# TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -255,9 +241,8 @@ ACCOUNT_FORMS = {
     'signup': 'myapp.forms.CustomSignupForm',
 }
 
-# Force HTTPS in OAuth redirect URIs
 if not DEBUG:
-    ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+    ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" # Force HTTPS in OAuth redirect URIs
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
@@ -266,28 +251,25 @@ if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     
     # Development fallback location for Local feed (IP geolocation doesn't work on localhost)
-    # Change these coordinates to your preferred test location
     GEOLOCATION_DEV_FALLBACK = {
-        'lat': 12.9716,       # Latitude
-        'lon': 77.5946,       # Longitude
+        'lat': 12.9716,       
+        'lon': 77.5946,     
         'city': 'Bangalore',
         'state': 'Karnataka',
         'country': 'India',
     }
     
-    # Global Feed Algorithm Toggle (Early-Stage Mode)
-    # When True, uses pure-recency sorting to prevent shallow/inactive feed appearance
-    # When False, uses sophisticated multi-factor ranking algorithm
+    # Global Feed Algorithm Toggle (Early-Stage Mode) True = Recency-Focused, False = Engagement-Focused
     GLOBAL_FEED_USE_RECENCY_MODE = config('GLOBAL_FEED_USE_RECENCY_MODE', cast=bool, default=True)
 else:
-    # Production SMTP configuration
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 587
+    EMAIL_HOST = 'smtp-relay.brevo.com'
+
+    EMAIL_PORT = config('EMAIL_PORT', cast=int)
     EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = config('EMAIL_HOST_USER')  # Replace via env var
+    EMAIL_HOST_USER = config('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+    DEFAULT_FROM_EMAIL = "DevMate Space <admin@devmate.space>"
 
 # Logging
 LOGGING = {
