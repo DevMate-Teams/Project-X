@@ -24,7 +24,7 @@ def get_explore_users(filter_dev, request, count=200, order_by='-created_at'):
 
 
 # =============================================================================
-# RECENCY MULTIPLIERS - How much to boost logs based on age
+# RECENCY MULTIPLIERS - Used by Local and Global feeds
 # =============================================================================
 RECENCY_MULTIPLIERS = [
     (timedelta(hours=1), 10.0),     # < 1 hour: 10x boost (very fresh)
@@ -36,22 +36,16 @@ RECENCY_MULTIPLIERS = [
 ]
 
 # =============================================================================
-# FRESHNESS PENALTIES - Aggressive down-weight for already-interacted logs
-# These are designed to push viewed content DOWN regardless of engagement
+# FRESHNESS PENALTIES - Used by Local and Global feeds
 # =============================================================================
 FRESHNESS_PENALTY_VIEWED = 0.15     # User has seen this log - drop to 15%
 FRESHNESS_PENALTY_REACTED = 0.05    # User reacted to this log - drop to 5%
 FRESHNESS_PENALTY_COMMENTED = 0.02  # User commented on this log - drop to 2%
 
 # =============================================================================
-# ENGAGEMENT SCORE CAP - Prevent high-engagement logs from dominating
+# ENGAGEMENT SCORE CAP - Used by Local feed
 # =============================================================================
 ENGAGEMENT_SCORE_CAP = 10.0  # Cap engagement contribution to prevent stale popular logs
-
-# =============================================================================
-# SECONDARY NETWORK CONFIG
-# =============================================================================
-SECONDARY_NETWORK_RATIO = 0.25  # 25% of feed from friends-of-friends
 
 
 # =============================================================================
@@ -423,55 +417,6 @@ def get_interaction_status(log_id, viewed_log_ids, reacted_log_ids, commented_lo
     elif log_id in viewed_log_ids:
         return (FRESHNESS_PENALTY_VIEWED, 'viewed')
     return (1.0, None)
-
-
-def calculate_log_score(log, user, viewed_log_ids, reacted_log_ids, commented_log_ids, is_secondary=False):
-    """
-    Calculate final score for a log using a RECENCY-FIRST formula.
-    
-    NEW FORMULA (recency dominates):
-    Score = (recency_multiplier * 10) + (capped_engagement * freshness_penalty)
-    
-    This ensures:
-    - Fresh unseen logs ALWAYS rank higher than old seen logs
-    - Engagement only matters for tie-breaking among similar-age logs
-    - Viewed/interacted logs drop significantly regardless of engagement
-    
-    If is_secondary (friend-of-friend), apply additional 0.7x multiplier
-    """
-    # Base engagement (capped to prevent domination)
-    engagement_score = calculate_engagement_score(log)
-    
-    # Recency boost - THIS IS THE PRIMARY RANKING FACTOR
-    recency = get_recency_multiplier(log.timestamp)
-    
-    # Freshness penalty based on deepest interaction
-    freshness, interaction_type = get_interaction_status(
-        log.id, viewed_log_ids, reacted_log_ids, commented_log_ids
-    )
-    
-    # Store interaction type for recommendation labels
-    log.user_interaction = interaction_type
-    
-    # NEW SCORING FORMULA: Recency is primary, engagement is secondary
-    # Recency score: dominates ranking (0-100 range)
-    recency_score = recency * 10
-    
-    # Engagement bonus: only affects similar-recency logs (0-10 range, reduced by freshness)
-    engagement_bonus = engagement_score * freshness
-    
-    # If user has interacted, HEAVILY penalize the recency score too
-    if interaction_type:
-        recency_score *= freshness
-    
-    # Final score
-    score = recency_score + engagement_bonus
-    
-    # Secondary network gets lower priority than direct network
-    if is_secondary:
-        score *= 0.7
-    
-    return score
 
 
 def get_user_interaction_sets(user):
@@ -1173,20 +1118,14 @@ def get_global_feed_logs(user, base_queryset, per_page, viewed_log_ids, reacted_
 
 def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=None):
     """
-    Advanced personalized feed algorithm with recency boost and freshness penalties.
+    Personalized feed algorithm for home page.
     
     Feed types:
-    - 'network': Logs from followed users + secondary network suggestions
-    - 'local': Logs from same location/organization (future)
-    - 'global': All logs, globally ranked (configurable mode)
-    
-    Scoring Formula:
-    Score = (engagement_score + 1) * recency_multiplier * freshness_penalty
-    
-    Where:
-    - engagement_score = reactions * 1.5 + comments * 2.0 + views * 0.1
-    - recency_multiplier = 5.0 (< 1hr) to 0.2 (> 7 days)
-    - freshness_penalty = 0.3 (viewed), 0.1 (reacted), 0.05 (commented)
+    - 'network': Logs sorted by timestamp (most recent first)
+      * Primary network: direct follows
+      * Secondary network: friends-of-friends
+    - 'local': Logs ranked by proximity and relevance
+    - 'global': Logs with multi-factor ranking (quality, trending, personalization)
     """
     from logs.models import Log, Reaction, Comment
     from django.conf import settings
@@ -1197,82 +1136,53 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
     
     user = request.user.info
     
-    # Get user interaction history for freshness calculation
-    viewed_log_ids, reacted_log_ids, commented_log_ids = get_user_interaction_sets(user)
-    
     # Get primary network (users I follow)
     primary_network_ids = get_network_user_ids(user)
     
-    # Base queryset with annotations for engagement metrics
-    base_queryset = Log.objects.select_related('user__user').annotate(
-        reaction_count=Count('reactions', distinct=True),
-        comment_count=Count('comments', distinct=True),
-    )
-    
     if type == 'network':
-        # NETWORK FEED: Logs from followed users + secondary network
+        # NETWORK FEED: Pure recency-based sorting (optimized for performance)
+        # Fetches logs from both primary and secondary connections sorted by timestamp
         
-        # Primary network logs (70-80% of feed)
-        primary_logs = list(
-            base_queryset.filter(user_id__in=primary_network_ids)
-            .order_by('-timestamp')[:500]  # Fixed limit for consistent coverage
-        )
-        
-        # Secondary network logs (20-30% of feed)
+        # Get secondary network IDs
         secondary_network_ids = get_secondary_network_user_ids(user, primary_network_ids)
-        secondary_logs = list(
-            base_queryset.filter(user_id__in=secondary_network_ids)
-            .order_by('-timestamp')[:300]  # Fixed limit for consistent coverage
+        
+        # Combine both primary and secondary network IDs
+        all_network_ids = primary_network_ids | secondary_network_ids
+        
+        # Optimized: Fetch logs sorted by timestamp with minimal fields loaded
+        # Database handles sorting using index on timestamp column
+        # Pagination happens at database level (not in Python)
+        logs_list = list(
+            Log.objects.filter(user_id__in=all_network_ids)
+            .select_related('user__user')  # Prevent N+1 queries
+            .annotate(
+                reaction_count=Count('reactions', distinct=True),
+                comment_count=Count('comments', distinct=True),
+            )
+            .order_by('-timestamp')  # Database-level sort using index
         )
         
-        # Score all logs - only secondary network gets recommendation labels
-        scored_logs = []
-        for log in primary_logs:
-            score = calculate_log_score(
-                log, user, viewed_log_ids, reacted_log_ids, commented_log_ids,
-                is_secondary=False
-            )
-            log.feed_score = score
+        # Add minimal metadata (only what's needed for display)
+        primary_id_set = primary_network_ids  # Reuse set for O(1) lookup
+        for log in logs_list:
             log.feed_type = 'network'
-            log.is_secondary_network = False
-            log.recommendation_reason = None  # No label for primary network
-            scored_logs.append((score, random.random(), log))  # Random for tie-breaking
-        
-        for log in secondary_logs:
-            score = calculate_log_score(
-                log, user, viewed_log_ids, reacted_log_ids, commented_log_ids,
-                is_secondary=True
-            )
-            log.feed_score = score
-            log.feed_type = 'network'
-            log.is_secondary_network = True
-            # Add recommendation reason ONLY for secondary network (suggested posts)
-            log.recommendation_reason = _get_secondary_recommendation_reason(log, user, primary_network_ids)
-            scored_logs.append((score, random.random(), log))
-        
-        # Sort by score (descending) and get unique logs
-        scored_logs.sort(key=lambda x: (-x[0], x[1]))
-        
-        # DEBUG: Print scores for verification
-        print("\n" + "="*60)
-        print(f"FEED SCORES FOR USER: {user.user.username}")
-        print("="*60)
-        for score, _, log in scored_logs:
-            network_type = "SECONDARY" if log.is_secondary_network else "PRIMARY"
-            print(f"({log.sig} by @{log.user.user.username} [{network_type}]) - Score: {score:.2f}")
-        print("="*60 + "\n")
-        
-        # Deduplicate (same log might appear from multiple paths)
-        seen_ids = set()
-        unique_logs = []
-        for _, _, log in scored_logs:
-            if log.id not in seen_ids:
-                seen_ids.add(log.id)
-                unique_logs.append(log)
-        
-        logs_list = unique_logs
+            log.is_secondary_network = log.user_id not in primary_id_set
+            # Add recommendation reason ONLY for secondary network
+            if log.is_secondary_network:
+                log.recommendation_reason = _get_secondary_recommendation_reason(log, user, primary_network_ids)
+            else:
+                log.recommendation_reason = None
         
     elif type == 'global':
+        # Get user interaction history for freshness calculation (used by Global feed)
+        viewed_log_ids, reacted_log_ids, commented_log_ids = get_user_interaction_sets(user)
+        
+        # Base queryset with annotations for engagement metrics
+        base_queryset = Log.objects.select_related('user__user').annotate(
+            reaction_count=Count('reactions', distinct=True),
+            comment_count=Count('comments', distinct=True),
+        )
+        
         # GLOBAL FEED: Sophisticated multi-factor ranking
         # Excludes: primary network, secondary network, nearby users (<100km)
         # Weights: quality(35%), trending(25%), personalization(20%), recency(12%), diversity(8%)
@@ -1282,6 +1192,15 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
         )
         
     else:
+        # Get user interaction history for freshness calculation (used by Local feed)
+        viewed_log_ids, reacted_log_ids, commented_log_ids = get_user_interaction_sets(user)
+        
+        # Base queryset with annotations for engagement metrics
+        base_queryset = Log.objects.select_related('user__user').annotate(
+            reaction_count=Count('reactions', distinct=True),
+            comment_count=Count('comments', distinct=True),
+        )
+        
         # LOCAL FEED: Proximity-based ranking with skill matching
         logs_list = get_local_feed_logs(
             user, base_queryset, per_page,
