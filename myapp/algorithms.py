@@ -323,13 +323,18 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
     cursor_id = None
     if cursor:
         try:
-            cursor_parts = cursor.split(',')
+            cursor_parts = cursor.split(',', 1)  # Split only on first comma
             if len(cursor_parts) == 2:
                 cursor_timestamp = parse_datetime(cursor_parts[0])
                 cursor_id = int(cursor_parts[1])
-        except (ValueError, AttributeError):
+                # Validate that both parts were successfully parsed
+                if cursor_timestamp is None or cursor_id is None:
+                    cursor_timestamp = None
+                    cursor_id = None
+        except (ValueError, AttributeError, TypeError):
             # Invalid cursor format, ignore and start from beginning
-            pass
+            cursor_timestamp = None
+            cursor_id = None
     
     if type == 'network':
         # NETWORK FEED: Pure recency-based sorting with cursor pagination
@@ -344,7 +349,7 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
         # Build query with cursor-based filtering
         query = Log.objects.filter(user_id__in=all_network_ids)
         
-        if cursor_timestamp and cursor_id:
+        if cursor_timestamp is not None and cursor_id is not None:
             # Fetch logs older than cursor using compound cursor (timestamp, id)
             # This guarantees no duplicates even when timestamps are identical
             query = query.filter(
@@ -381,7 +386,7 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
         
         query = Log.objects.all()
         
-        if cursor_timestamp and cursor_id:
+        if cursor_timestamp is not None and cursor_id is not None:
             # Fetch logs older than cursor using compound cursor (timestamp, id)
             # This guarantees no duplicates even when timestamps are identical
             query = query.filter(
@@ -412,7 +417,7 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
         logs_list = get_local_feed_logs(user)
         
         # Apply cursor-based filtering for local feed using compound cursor
-        if cursor_timestamp and cursor_id:
+        if cursor_timestamp is not None and cursor_id is not None:
             logs_list = [
                 log for log in logs_list 
                 if log.timestamp < cursor_timestamp or 
