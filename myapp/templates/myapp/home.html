@@ -121,15 +121,15 @@
                         
                         <!-- Filter toggle at the end of the line -->
                         <div class="ml-4 flex items-center bg-[#1a1f2b]/80 border border-gray-700/50 rounded-lg p-0.5 backdrop-blur-sm">
-                            <a href='?feed=network'
+                            <a href='/?feed=network'
                                 class="px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-all duration-200 {% if request.GET.feed == 'network' or request.GET.feed == '' or request.GET.feed == None %}bg-gray-700 text-white{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-800/50{% endif %}">
                                 My Network
                             </a>
-                            <a href='?feed=local'
+                            <a href='/?feed=local'
                                 class="px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-all duration-200 {% if request.GET.feed == 'local' %}bg-gray-700 text-white{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-800/50{% endif %}">
                                 Local
                             </a>
-                            <a href='?feed=global'
+                            <a href='/?feed=global'
                                 class="px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-all duration-200 {% if request.GET.feed == 'global' %}bg-gray-700 text-white{% else %}text-gray-400 hover:text-gray-300 hover:bg-gray-800/50{% endif %}">
                                 CIT Chennai
                             </a>
