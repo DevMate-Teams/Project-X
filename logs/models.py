@@ -22,7 +22,7 @@ class Log(models.Model):
     snap_shot = models.ImageField(upload_to='log_snap_shot', blank=True, null=True)
     code_snippet = models.TextField(max_length=10000, blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
-    link = models.URLField(blank=True, null=True)
+    link = models.URLField(blank=True, null=True, max_length=200)
 
     # Unique signature
     sig = models.CharField(max_length=20, unique=True, default=generate_unique_signature)

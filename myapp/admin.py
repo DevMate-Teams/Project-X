@@ -20,6 +20,24 @@ class userinfoAdmin(admin.ModelAdmin):
     # Show UUID as read-only in the detail/edit page
     readonly_fields = ('uuid',)
     
+    # Enable search by username, email, name, and location
+    search_fields = [
+        'user__username',
+        'user__email',
+        'user__first_name',
+        'user__last_name',
+        'location',
+        'city',
+        'state',
+        'country',
+    ]
+    
+    # Display useful columns in list view
+    list_display = ['user', 'location', 'city', 'created_at', 'last_seen']
+    
+    # Add filters
+    list_filter = ['created_at', 'country']
+    
 @admin.register(Log)
 class LogAdmin(admin.ModelAdmin):
     readonly_fields = ('sig',)

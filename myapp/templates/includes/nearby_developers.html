@@ -45,7 +45,7 @@
                     <!-- Username -->
                     <a href="{% url 'user_profile' developer.user.username %}" 
                        class="block text-[15px] font-medium text-[#e6edf3] hover:text-[#238636] truncate transition-colors mb-1.5 min-[1110px]:text-sm min-[1110px]:mb-0.5">
-                        {{ developer.user.username }}
+                        {{ developer.user.username|truncatechars:15 }}
                     </a>
                     
                     <!-- Distance Badge (Mobile) -->
