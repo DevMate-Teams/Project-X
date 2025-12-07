@@ -302,7 +302,7 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
     - 'global': Logs sorted by timestamp (most recent first)
     
     Args:
-        cursor: Timestamp-based cursor for efficient pagination (ISO format string or None)
+        cursor: Compound cursor "timestamp,id" for efficient pagination (None for first page)
         page: Legacy parameter for backward compatibility (ignored when cursor is used)
         per_page: Number of items to return
     
@@ -311,16 +311,25 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
     """
     from logs.models import Log, Reaction, Comment
     from django.utils.dateparse import parse_datetime
+    from django.db.models import Q
     
     user = request.user.info
     
     # Get primary network (users I follow)
     primary_network_ids = get_network_user_ids(user)
     
-    # Parse cursor if provided (cursor is timestamp in ISO format)
+    # Parse compound cursor if provided (format: "timestamp,id")
     cursor_timestamp = None
+    cursor_id = None
     if cursor:
-        cursor_timestamp = parse_datetime(cursor)
+        try:
+            cursor_parts = cursor.split(',')
+            if len(cursor_parts) == 2:
+                cursor_timestamp = parse_datetime(cursor_parts[0])
+                cursor_id = int(cursor_parts[1])
+        except (ValueError, AttributeError):
+            # Invalid cursor format, ignore and start from beginning
+            pass
     
     if type == 'network':
         # NETWORK FEED: Pure recency-based sorting with cursor pagination
@@ -335,9 +344,13 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
         # Build query with cursor-based filtering
         query = Log.objects.filter(user_id__in=all_network_ids)
         
-        if cursor_timestamp:
-            # Fetch logs older than cursor (for pagination)
-            query = query.filter(timestamp__lt=cursor_timestamp)
+        if cursor_timestamp and cursor_id:
+            # Fetch logs older than cursor using compound cursor (timestamp, id)
+            # This guarantees no duplicates even when timestamps are identical
+            query = query.filter(
+                Q(timestamp__lt=cursor_timestamp) |
+                Q(timestamp=cursor_timestamp, id__lt=cursor_id)
+            )
         
         # Fetch per_page + 1 to check if there are more items
         logs_list = list(
@@ -347,7 +360,7 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
                 reaction_count=Count('reactions', distinct=True),
                 comment_count=Count('comments', distinct=True),
             )
-            .order_by('-timestamp', '-id')  # Secondary sort by ID for deterministic ordering
+            .order_by('-timestamp', '-id')  # Deterministic ordering: newest first, then highest ID
             [:per_page + 1]
         )
         
@@ -368,9 +381,13 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
         
         query = Log.objects.all()
         
-        if cursor_timestamp:
-            # Fetch logs older than cursor (for pagination)
-            query = query.filter(timestamp__lt=cursor_timestamp)
+        if cursor_timestamp and cursor_id:
+            # Fetch logs older than cursor using compound cursor (timestamp, id)
+            # This guarantees no duplicates even when timestamps are identical
+            query = query.filter(
+                Q(timestamp__lt=cursor_timestamp) |
+                Q(timestamp=cursor_timestamp, id__lt=cursor_id)
+            )
         
         # Fetch per_page + 1 to check if there are more items
         logs_list = list(
@@ -380,7 +397,7 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
                 reaction_count=Count('reactions', distinct=True),
                 comment_count=Count('comments', distinct=True),
             )
-            .order_by('-timestamp', '-id')  # Secondary sort by ID for deterministic ordering
+            .order_by('-timestamp', '-id')  # Deterministic ordering: newest first, then highest ID
             [:per_page + 1]
         )
         
@@ -394,9 +411,13 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
         # LOCAL FEED: Simple proximity-based filtering (within 250km) + timestamp sorting
         logs_list = get_local_feed_logs(user)
         
-        # Apply cursor-based filtering for local feed
-        if cursor_timestamp:
-            logs_list = [log for log in logs_list if log.timestamp < cursor_timestamp]
+        # Apply cursor-based filtering for local feed using compound cursor
+        if cursor_timestamp and cursor_id:
+            logs_list = [
+                log for log in logs_list 
+                if log.timestamp < cursor_timestamp or 
+                   (log.timestamp == cursor_timestamp and log.id < cursor_id)
+            ]
         
         # Limit to per_page + 1
         logs_list = logs_list[:per_page + 1]
@@ -408,10 +429,11 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
         # Remove the extra item used for has_next check
         logs_list = logs_list[:per_page]
     
-    # Generate next cursor from last item's timestamp
+    # Generate next cursor from last item (compound cursor: "timestamp,id")
     next_cursor = None
     if has_next and logs_list:
-        next_cursor = logs_list[-1].timestamp.isoformat()
+        last_item = logs_list[-1]
+        next_cursor = f"{last_item.timestamp.isoformat()},{last_item.id}"
     
     # Return cursor-based response
     return {
