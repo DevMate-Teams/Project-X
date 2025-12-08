@@ -1000,15 +1000,15 @@ def load_more_notifications(request):
 @require_POST
 def update_user_geolocation(request):
     """
-    Update user's latitude/longitude from browser Geolocation API.
-    This provides accurate location for the Local feed algorithm.
+    Update user's browser GPS location.
+    Called when browser Geolocation API returns coordinates.
     
     Expected POST data:
     - latitude: float
     - longitude: float
     """
     import json
-    from .utils.geolocation import update_user_location_from_browser
+    from .utils.geolocation import update_browser_location
     
     try:
         data = json.loads(request.body)
@@ -1044,17 +1044,17 @@ def update_user_geolocation(request):
                 'error': 'Invalid coordinate format'
             }, status=400)
         
-        success = update_user_location_from_browser(request.user.info, lat, lon)
+        success = update_browser_location(request.user.info, lat, lon)
         
         if success:
             return JsonResponse({
                 'success': True,
-                'message': 'Location updated successfully'
+                'message': 'Browser location updated successfully'
             })
         else:
             return JsonResponse({
                 'success': False,
-                'error': 'Failed to update location'
+                'error': 'Failed to update browser location'
             }, status=500)
             
     except json.JSONDecodeError:
@@ -1072,67 +1072,109 @@ def update_user_geolocation(request):
 @login_required
 def get_user_geolocation_status(request):
     """
-    Get current user's geolocation status.
-    Returns whether coordinates are set, their values, and if browser refresh is needed.
+    Get current user's complete geolocation status.
+    Returns all location data and recommended action for frontend.
     """
-    from .utils.geolocation import should_request_browser_location
+    from .utils.geolocation import get_geolocation_status
     
     user_info = request.user.info
+    status = get_geolocation_status(user_info)
     
-    has_location = bool(user_info.latitude and user_info.longitude)
-    needs_refresh = should_request_browser_location(user_info)
-    
-    return JsonResponse({
-        'has_location': has_location,
-        'needs_refresh': needs_refresh,
-        'latitude': float(user_info.latitude) if user_info.latitude else None,
-        'longitude': float(user_info.longitude) if user_info.longitude else None,
-        'city': user_info.city,
-        'state': user_info.state,
-        'country': user_info.country,
-        'ip_updated_at': user_info.location_ip_updated_at.isoformat() if user_info.location_ip_updated_at else None,
-        'browser_updated_at': user_info.location_browser_updated_at.isoformat() if user_info.location_browser_updated_at else None,
-    })
+    return JsonResponse(status)
 
 
 @login_required
 @require_POST
-def trigger_ip_geolocation_fallback(request):
+def update_ip_geolocation(request):
     """
-    Fallback endpoint to trigger IP-based geolocation when browser permission is denied.
+    Update user's IP-based location.
+    Called from client-side after IP API returns coordinates.
     
-    Called by JavaScript when:
-    - User denies browser geolocation permission
-    - Browser geolocation API fails
-    - navigator.geolocation is not available
+    Client fetches from ip-api.com or ipwho.is directly,
+    then sends coordinates here for storage.
+    This uses the user's IP quota, not the server's.
     
-    This ensures users still get location-based features even without browser permission.
-    Forces an IP geolocation update regardless of staleness.
+    Expected POST data:
+    - latitude: float
+    - longitude: float
     """
-    from .utils.geolocation import update_user_location_from_ip
+    import json
+    from .utils.geolocation import update_ip_location
     
     try:
-        user_info = request.user.info
+        data = json.loads(request.body)
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
         
-        # Force IP-based geolocation update (ignore staleness check)
-        success = update_user_location_from_ip(user_info, request, force=True)
+        if latitude is None or longitude is None:
+            return JsonResponse({
+                'success': False,
+                'error': 'Missing latitude or longitude'
+            }, status=400)
+        
+        # Validate coordinates
+        try:
+            lat = float(latitude)
+            lon = float(longitude)
+            
+            if not (-90 <= lat <= 90):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid latitude (must be -90 to 90)'
+                }, status=400)
+            
+            if not (-180 <= lon <= 180):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid longitude (must be -180 to 180)'
+                }, status=400)
+                
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid coordinate format'
+            }, status=400)
+        
+        success = update_ip_location(request.user.info, lat, lon)
         
         if success:
             return JsonResponse({
                 'success': True,
-                'message': 'Location set via IP fallback',
-                'latitude': float(user_info.latitude) if user_info.latitude else None,
-                'longitude': float(user_info.longitude) if user_info.longitude else None,
-                'city': user_info.city,
-                'state': user_info.state,
-                'country': user_info.country,
+                'message': 'IP location updated successfully'
             })
         else:
             return JsonResponse({
                 'success': False,
-                'error': 'Could not determine location from IP address'
+                'error': 'Failed to update IP location'
             }, status=500)
             
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+@require_POST
+def set_permission_denied(request):
+    """
+    Record that user denied browser geolocation permission.
+    System will use IP fallback and not prompt again.
+    """
+    from .utils.geolocation import set_browser_permission_denied
+    
+    try:
+        set_browser_permission_denied(request.user.info)
+        return JsonResponse({
+            'success': True,
+            'message': 'Permission denial recorded'
+        })
     except Exception as e:
         return JsonResponse({
             'success': False,

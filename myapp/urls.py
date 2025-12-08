@@ -41,8 +41,9 @@ urlpatterns = [
     path('notifications/count/', views.get_notification_count_api, name='get_notification_count'),
     path('notifications/<int:notification_id>/mark-read/', views.mark_notification_read, name='mark_notification_read'),
     
-    # Geolocation (for Local feed)
-    path('api/geolocation/update/', views.update_user_geolocation, name='update_geolocation'),
+    # Geolocation (for Local feed) - MVP system
+    path('api/geolocation/browser/update/', views.update_user_geolocation, name='update_browser_geolocation'),
+    path('api/geolocation/ip/update/', views.update_ip_geolocation, name='update_ip_geolocation'),
     path('api/geolocation/status/', views.get_user_geolocation_status, name='geolocation_status'),
-    path('api/geolocation/ip-fallback/', views.trigger_ip_geolocation_fallback, name='geolocation_ip_fallback'),
+    path('api/geolocation/permission/denied/', views.set_permission_denied, name='set_permission_denied'),
 ]

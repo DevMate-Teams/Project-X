@@ -82,7 +82,6 @@ MIDDLEWARE = [
     
     "allauth.account.middleware.AccountMiddleware",
     "myapp.middleware.UpdateLastSeenMiddleware",
-    "myapp.middleware.AutoGeolocationMiddleware",  # Auto-detect location from IP
     "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
@@ -249,18 +248,6 @@ if not DEBUG:
 
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    
-    # Development fallback location for Local feed (IP geolocation doesn't work on localhost)
-    GEOLOCATION_DEV_FALLBACK = {
-        'lat': 12.9716,       
-        'lon': 77.5946,     
-        'city': 'Bangalore',
-        'state': 'Karnataka',
-        'country': 'India',
-    }
-    
-    # Global Feed Algorithm Toggle (Early-Stage Mode) True = Recency-Focused, False = Engagement-Focused
-    GLOBAL_FEED_USE_RECENCY_MODE = config('GLOBAL_FEED_USE_RECENCY_MODE', cast=bool, default=True)
 else:
     # Brevo HTTP API Email Backend (Production)
     EMAIL_BACKEND = 'helpers.brevo.brevo_backend.BrevoEmailBackend'

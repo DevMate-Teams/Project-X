@@ -26,11 +26,27 @@ class userinfo(models.Model):
     state = models.CharField(max_length=100, blank=True, null=True)
     country = models.CharField(max_length=100, blank=True, null=True)
     # Geo-coordinates for Local feed algorithm (auto-set by system)
+    # Browser location (primary, most accurate)
+    browser_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
+    browser_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
+    browser_location_updated_at = models.DateTimeField(null=True, blank=True, help_text="When browser GPS location was last updated")
+    
+    # IP location (fallback, city-level accuracy)
+    ip_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
+    ip_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
+    ip_location_updated_at = models.DateTimeField(null=True, blank=True, help_text="When IP-based location was last updated")
+    
+    # Browser permission tracking
+    PERMISSION_CHOICES = [
+        ('unknown', 'Unknown'),
+        ('allowed', 'Allowed'),
+        ('denied', 'Denied'),
+    ]
+    browser_permission_status = models.CharField(max_length=10, choices=PERMISSION_CHOICES, default='unknown', help_text="Browser geolocation permission status")
+    
+    # Legacy fields for backward compatibility (computed properties)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
-    # Separate timestamps for different geolocation methods
-    location_ip_updated_at = models.DateTimeField(null=True, blank=True, help_text="When IP-based location was last updated")
-    location_browser_updated_at = models.DateTimeField(null=True, blank=True, help_text="When browser GPS location was last updated")
     website = models.URLField(blank=True, null=True)
     phone = PhoneNumberField(blank=True, null=True)
     gender = models.CharField(max_length=25, null=True, blank=True, choices=GENDER_CHOICES)
@@ -50,6 +66,52 @@ class userinfo(models.Model):
     needs_profile_completion = models.BooleanField(default=False)
     last_seen = models.DateTimeField(default=timezone.now)
     timezone = models.CharField(max_length=63, default='UTC', help_text="User's timezone for displaying dates/times")
+    
+    def get_best_location(self):
+        """
+        Get the best available location coordinates following MVP priority:
+        1. Fresh browser location (< 48 hours)
+        2. Fresh IP location (< 12 hours)
+        3. Stale browser location
+        4. Stale IP location
+        5. None
+        
+        Returns: tuple (latitude, longitude, source) or (None, None, None)
+        """
+        from datetime import timedelta
+        from django.utils import timezone as django_timezone
+        
+        now = django_timezone.now()
+        
+        # Priority 1: Fresh browser location (< 48 hours)
+        if self.browser_latitude and self.browser_longitude and self.browser_location_updated_at:
+            age = now - self.browser_location_updated_at
+            if age < timedelta(hours=48):
+                return (self.browser_latitude, self.browser_longitude, 'browser_fresh')
+        
+        # Priority 2: Fresh IP location (< 12 hours)
+        if self.ip_latitude and self.ip_longitude and self.ip_location_updated_at:
+            age = now - self.ip_location_updated_at
+            if age < timedelta(hours=12):
+                return (self.ip_latitude, self.ip_longitude, 'ip_fresh')
+        
+        # Priority 3: Stale browser location
+        if self.browser_latitude and self.browser_longitude:
+            return (self.browser_latitude, self.browser_longitude, 'browser_stale')
+        
+        # Priority 4: Stale IP location
+        if self.ip_latitude and self.ip_longitude:
+            return (self.ip_latitude, self.ip_longitude, 'ip_stale')
+        
+        # No location available
+        return (None, None, None)
+    
+    def save(self, *args, **kwargs):
+        """Override save to sync legacy latitude/longitude fields"""
+        lat, lon, _ = self.get_best_location()
+        self.latitude = lat
+        self.longitude = lon
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return self.user.username 
