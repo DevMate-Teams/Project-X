@@ -7,7 +7,7 @@
  * - Intersection Observer for detecting visible logs
  */
 
-(function() {
+(function () {
     'use strict';
 
     // ==========================================================================
@@ -35,7 +35,7 @@
     let isLoading = false;
     let hasMoreContent = true;
     let currentFeedType = 'network';
-    
+
     // View tracking state
     let viewedLogs = new Set();
     let pendingViews = [];
@@ -89,13 +89,13 @@
         }
 
         currentFeedType = getFeedTypeFromURL();
-        
+
         // Initialize cursor from data attribute (set by server on initial load)
         const initialCursor = feedContainer.dataset.nextCursor;
         if (initialCursor && initialCursor !== 'None') {
             nextCursor = initialCursor;
         }
-        
+
         // Check if there's more content from server
         const hasNext = feedContainer.dataset.hasNext;
         if (hasNext !== undefined) {
@@ -151,53 +151,53 @@
                 'X-Requested-With': 'XMLHttpRequest',
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.html && data.html.trim() !== '') {
-                // Create a temporary container to parse the HTML
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = data.html;
+            .then(response => response.json())
+            .then(data => {
+                if (data.html && data.html.trim() !== '') {
+                    // Create a temporary container to parse the HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data.html;
 
-                // Append each child to the feed container
-                while (tempDiv.firstChild) {
-                    feedContainer.appendChild(tempDiv.firstChild);
+                    // Append each child to the feed container
+                    while (tempDiv.firstChild) {
+                        feedContainer.appendChild(tempDiv.firstChild);
+                    }
+
+                    // Re-initialize view tracking for new items
+                    initViewTracking();
+
+                    // Re-initialize syntax highlighting for new items
+                    if (typeof hljs !== 'undefined') {
+                        feedContainer.querySelectorAll('pre code:not(.hljs)').forEach((block) => {
+                            hljs.highlightElement(block);
+                        });
+                    }
                 }
 
-                // Re-initialize view tracking for new items
-                initViewTracking();
-                
-                // Re-initialize syntax highlighting for new items
-                if (typeof hljs !== 'undefined') {
-                    feedContainer.querySelectorAll('pre code:not(.hljs)').forEach((block) => {
-                        hljs.highlightElement(block);
-                    });
-                }
-            }
+                // Update cursor and hasMoreContent from response
+                hasMoreContent = data.has_next;
+                nextCursor = data.next_cursor;
 
-            // Update cursor and hasMoreContent from response
-            hasMoreContent = data.has_next;
-            nextCursor = data.next_cursor;
-
-            if (!hasMoreContent && loadingIndicator) {
-                loadingIndicator.innerHTML = `
+                if (!hasMoreContent && loadingIndicator) {
+                    loadingIndicator.innerHTML = `
                      <div class="flex flex-col items-center gap-2 py-4">
                         <i class="fa-solid fa-check-circle text-2xl text-green-500"></i>
                         <p class="text-sm text-[#7d8590] font-medium">All caught up!</p>
                     </div>
                 `;
-                loadingIndicator.classList.remove('hidden');
-            }
-        })
-        .catch(error => {
-            console.error('Error loading more content:', error);
-            // Don't revert cursor on error - keep trying from same position
-        })
-        .finally(() => {
-            isLoading = false;
-            if (hasMoreContent && loadingIndicator) {
-                loadingIndicator.classList.add('hidden');
-            }
-        });
+                    loadingIndicator.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading more content:', error);
+                // Don't revert cursor on error - keep trying from same position
+            })
+            .finally(() => {
+                isLoading = false;
+                if (hasMoreContent && loadingIndicator) {
+                    loadingIndicator.classList.add('hidden');
+                }
+            });
     }
 
     // ==========================================================================
@@ -215,7 +215,7 @@
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const logSig = entry.target.dataset.logSig;
-                    
+
                     if (logSig && !viewedLogs.has(logSig)) {
                         // Start timer for minimum view time
                         entry.target.viewTimer = setTimeout(() => {
@@ -276,21 +276,21 @@
             },
             body: JSON.stringify({ log_sigs: logSigs })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                console.log(`Tracked ${data.total} log views`);
-            }
-        })
-        .catch(error => {
-            console.error('Error tracking views:', error);
-            // Re-add failed sigs back to pending for retry
-            logSigs.forEach(sig => {
-                if (!pendingViews.includes(sig)) {
-                    pendingViews.push(sig);
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`Tracked ${data.total} log views`);
                 }
+            })
+            .catch(error => {
+                console.error('Error tracking views:', error);
+                // Re-add failed sigs back to pending for retry
+                logSigs.forEach(sig => {
+                    if (!pendingViews.includes(sig)) {
+                        pendingViews.push(sig);
+                    }
+                });
             });
-        });
     }
 
     // Send any remaining pending views before page unload
@@ -310,7 +310,7 @@
         // Initialize geolocation on any page (not just feed pages)
         // This ensures new users get prompted regardless of which tab they visit first
         initGeolocation();
-        
+
         // Only initialize feed-specific features on pages with feed container
         if (!document.getElementById('feed-container')) {
             console.log('No feed container found, skipping feed scroll init');
@@ -338,9 +338,10 @@
     // 4. Global Feed Fallback
     //
     // All IP API calls happen client-side (user's quota, not server's).
+    // OPTIMIZED: Dynamic feed refresh instead of page reload for faster UX.
     // ==========================================================================
 
-    // LocalStorage key to prevent reload loops
+    // LocalStorage key to prevent redundant location checks
     const GEO_JUST_UPDATED_KEY = 'geo_just_updated';
     const GEO_UPDATE_COOLDOWN_MS = 5000; // 5 seconds cooldown after update
 
@@ -368,7 +369,7 @@
             return;
         }
 
-        // CRITICAL: Prevent reload loop after location update
+        // CRITICAL: Prevent redundant checks after location update
         const justUpdated = localStorage.getItem(GEO_JUST_UPDATED_KEY);
         if (justUpdated) {
             const timeSinceUpdate = Date.now() - parseInt(justUpdated);
@@ -389,15 +390,15 @@
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             credentials: 'same-origin'
         })
-        .then(response => response.ok ? response.json() : Promise.reject('Status fetch failed'))
-        .then(status => {
-            console.log('[Geo MVP] Status:', status);
-            executeMVPAlgorithm(status);
-        })
-        .catch(error => {
-            console.error('[Geo MVP] Status check failed:', error);
-            // Graceful degradation: Local feed still works without location
-        });
+            .then(response => response.ok ? response.json() : Promise.reject('Status fetch failed'))
+            .then(status => {
+                console.log('[Geo MVP] Status:', status);
+                executeMVPAlgorithm(status);
+            })
+            .catch(error => {
+                console.error('[Geo MVP] Status check failed:', error);
+                // Graceful degradation: Local feed still works without location
+            });
     }
 
     /**
@@ -406,7 +407,7 @@
      */
     function executeMVPAlgorithm(status) {
         const action = status.recommended_action;
-        
+
         console.log('[Geo MVP] Recommended action:', action);
 
         switch (action) {
@@ -451,6 +452,7 @@
 
     /**
      * Request browser geolocation permission (first-time user).
+     * OPTIMIZED: Reduced timeout from 10s to 5s for faster fallback.
      */
     function requestBrowserPermission() {
         if (!navigator.geolocation) {
@@ -469,18 +471,18 @@
             // ERROR
             (error) => {
                 console.log('[Geo MVP] Browser permission denied/failed:', error.message);
-                
-                // Record denial on server
+
+                // Record denial on server (non-blocking)
                 if (error.code === error.PERMISSION_DENIED) {
                     recordPermissionDenied();
                 }
-                
+
                 // Fallback to IP
                 fetchIPLocation();
             },
             {
-                enableHighAccuracy: true,
-                timeout: 10000,
+                enableHighAccuracy: false,  // OPTIMIZED: faster acquisition
+                timeout: 5000,              // OPTIMIZED: reduced from 10s to 5s
                 maximumAge: 300000
             }
         );
@@ -488,6 +490,7 @@
 
     /**
      * Attempt silent browser location refresh (permission already granted).
+     * OPTIMIZED: Reduced timeout for faster fallback.
      */
     function attemptBrowserRefresh() {
         if (!navigator.geolocation) {
@@ -509,8 +512,8 @@
                 fetchIPLocation();
             },
             {
-                enableHighAccuracy: true,
-                timeout: 10000,
+                enableHighAccuracy: false,  // OPTIMIZED: faster acquisition
+                timeout: 5000,              // OPTIMIZED: reduced from 10s to 5s
                 maximumAge: 300000
             }
         );
@@ -518,8 +521,12 @@
 
     /**
      * Save browser GPS coordinates to server.
+     * OPTIMIZED: Dynamic feed refresh instead of full page reload.
      */
     function saveBrowserLocation(latitude, longitude) {
+        // Show loading indicator immediately
+        showLocationLoadingIndicator();
+
         fetch('/api/geolocation/browser/update/', {
             method: 'POST',
             headers: {
@@ -530,65 +537,69 @@
             credentials: 'same-origin',
             body: JSON.stringify({ latitude, longitude })
         })
-        .then(response => response.ok ? response.json() : Promise.reject('Browser update failed'))
-        .then(data => {
-            if (data.success) {
-                console.log('[Geo MVP] Browser location saved, reloading...');
-                // Set flag before reload to prevent infinite loop
-                localStorage.setItem(GEO_JUST_UPDATED_KEY, Date.now().toString());
-                window.location.reload();
-            }
-        })
-        .catch(error => {
-            console.error('[Geo MVP] Failed to save browser location:', error);
-            fetchIPLocation();  // Fallback to IP
-        });
+            .then(response => response.ok ? response.json() : Promise.reject('Browser update failed'))
+            .then(data => {
+                if (data.success) {
+                    console.log('[Geo MVP] Browser location saved, refreshing feed...');
+                    localStorage.setItem(GEO_JUST_UPDATED_KEY, Date.now().toString());
+                    // OPTIMIZED: Dynamic feed refresh instead of page reload
+                    refreshLocalFeed();
+                }
+            })
+            .catch(error => {
+                console.error('[Geo MVP] Failed to save browser location:', error);
+                hideLocationLoadingIndicator();
+                fetchIPLocation();  // Fallback to IP
+            });
     }
 
     /**
      * Fetch IP-based location from client-side API (user's quota).
-     * Tries multiple APIs in sequence until one succeeds.
+     * OPTIMIZED: Try APIs in parallel with Promise.race for faster response.
      */
     function fetchIPLocation() {
         console.log('[Geo MVP] Fetching IP location from client-side APIs...');
+        showLocationLoadingIndicator();
 
-        // Try each API in sequence
-        tryIPAPI(0);
-
-        function tryIPAPI(index) {
-            if (index >= IP_GEOLOCATION_APIS.length) {
-                console.warn('[Geo MVP] All IP APIs failed');
-                showGlobalFeedMessage();
-                return;
-            }
-
-            const api = IP_GEOLOCATION_APIS[index];
-            console.log(`[Geo MVP] Trying ${api.name}...`);
-
-            fetch(api.url, {
+        // OPTIMIZED: Try all APIs in parallel, use first successful response
+        const apiPromises = IP_GEOLOCATION_APIS.map((api, index) => {
+            return fetch(api.url, {
                 method: 'GET',
                 headers: { 'Accept': 'application/json' }
             })
-            .then(response => response.ok ? response.json() : Promise.reject(`HTTP ${response.status}`))
-            .then(data => {
-                const coords = api.parse(data);
-                if (coords && coords.lat && coords.lon) {
-                    console.log(`[Geo MVP] ${api.name} success:`, coords.lat, coords.lon);
-                    saveIPLocation(coords.lat, coords.lon);
-                } else {
-                    console.log(`[Geo MVP] ${api.name} returned invalid data`);
-                    tryIPAPI(index + 1);  // Try next API
-                }
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    const coords = api.parse(data);
+                    if (coords && coords.lat && coords.lon) {
+                        console.log(`[Geo MVP] ${api.name} success:`, coords.lat, coords.lon);
+                        return coords;
+                    }
+                    throw new Error('Invalid data');
+                })
+                .catch(error => {
+                    console.log(`[Geo MVP] ${api.name} failed:`, error.message);
+                    throw error;  // Propagate to allow Promise.any to try others
+                });
+        });
+
+        // Use Promise.any to get first successful result (or all fail)
+        Promise.any(apiPromises)
+            .then(coords => {
+                saveIPLocation(coords.lat, coords.lon);
             })
             .catch(error => {
-                console.log(`[Geo MVP] ${api.name} failed:`, error);
-                tryIPAPI(index + 1);  // Try next API
+                console.warn('[Geo MVP] All IP APIs failed');
+                hideLocationLoadingIndicator();
+                showGlobalFeedMessage();
             });
-        }
     }
 
     /**
      * Save IP-based coordinates to server.
+     * OPTIMIZED: Dynamic feed refresh instead of full page reload.
      */
     function saveIPLocation(latitude, longitude) {
         fetch('/api/geolocation/ip/update/', {
@@ -601,19 +612,20 @@
             credentials: 'same-origin',
             body: JSON.stringify({ latitude, longitude })
         })
-        .then(response => response.ok ? response.json() : Promise.reject('IP update failed'))
-        .then(data => {
-            if (data.success) {
-                console.log('[Geo MVP] IP location saved, reloading...');
-                // Set flag before reload to prevent infinite loop
-                localStorage.setItem(GEO_JUST_UPDATED_KEY, Date.now().toString());
-                window.location.reload();
-            }
-        })
-        .catch(error => {
-            console.error('[Geo MVP] Failed to save IP location:', error);
-            showGlobalFeedMessage();
-        });
+            .then(response => response.ok ? response.json() : Promise.reject('IP update failed'))
+            .then(data => {
+                if (data.success) {
+                    console.log('[Geo MVP] IP location saved, refreshing feed...');
+                    localStorage.setItem(GEO_JUST_UPDATED_KEY, Date.now().toString());
+                    // OPTIMIZED: Dynamic feed refresh instead of page reload
+                    refreshLocalFeed();
+                }
+            })
+            .catch(error => {
+                console.error('[Geo MVP] Failed to save IP location:', error);
+                hideLocationLoadingIndicator();
+                showGlobalFeedMessage();
+            });
     }
 
     /**
@@ -628,8 +640,90 @@
             },
             credentials: 'same-origin'
         })
-        .then(() => console.log('[Geo MVP] Permission denial recorded'))
-        .catch(error => console.error('[Geo MVP] Failed to record denial:', error));
+            .then(() => console.log('[Geo MVP] Permission denial recorded'))
+            .catch(error => console.error('[Geo MVP] Failed to record denial:', error));
+    }
+
+    /**
+     * Dynamically refresh the Local feed content via AJAX.
+     * OPTIMIZED: No page reload - just fetch and replace feed content.
+     */
+    function refreshLocalFeed() {
+        const feedContainer = document.getElementById('feed-container');
+        if (!feedContainer) {
+            // No feed container, fall back to reload
+            window.location.reload();
+            return;
+        }
+
+        console.log('[Geo MVP] Refreshing feed via AJAX...');
+
+        // Fetch fresh feed content
+        fetch('/?feed=local', {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        })
+            .then(response => response.text())
+            .then(html => {
+                // Parse the response and extract feed items
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newFeedContainer = doc.getElementById('feed-container');
+
+                if (newFeedContainer) {
+                    // Replace feed content
+                    feedContainer.innerHTML = newFeedContainer.innerHTML;
+                    feedContainer.dataset.nextCursor = newFeedContainer.dataset.nextCursor || '';
+                    feedContainer.dataset.hasNext = newFeedContainer.dataset.hasNext || 'False';
+
+                    // Re-initialize infinite scroll and view tracking
+                    initViewTracking();
+
+                    // Re-apply syntax highlighting
+                    if (typeof hljs !== 'undefined') {
+                        feedContainer.querySelectorAll('pre code:not(.hljs)').forEach((block) => {
+                            hljs.highlightElement(block);
+                        });
+                    }
+
+                    console.log('[Geo MVP] Feed refreshed successfully');
+                }
+
+                hideLocationLoadingIndicator();
+            })
+            .catch(error => {
+                console.error('[Geo MVP] Feed refresh failed, falling back to reload:', error);
+                window.location.reload();
+            });
+    }
+
+    /**
+     * Show loading indicator while fetching location.
+     */
+    function showLocationLoadingIndicator() {
+        let indicator = document.getElementById('geo-loading-indicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = 'geo-loading-indicator';
+            indicator.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2';
+            indicator.innerHTML = `
+                <div class="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                <span class="text-sm">Getting your location...</span>
+            `;
+            document.body.appendChild(indicator);
+        }
+        indicator.classList.remove('hidden');
+    }
+
+    /**
+     * Hide location loading indicator.
+     */
+    function hideLocationLoadingIndicator() {
+        const indicator = document.getElementById('geo-loading-indicator');
+        if (indicator) {
+            indicator.classList.add('hidden');
+        }
     }
 
     /**
@@ -637,8 +731,21 @@
      */
     function showGlobalFeedMessage() {
         console.log('[Geo MVP] Showing Global feed suggestion');
-        // Could display a banner/toast here if desired
-        // For MVP, Local feed still shows but without location-based ranking
+        hideLocationLoadingIndicator();
+
+        // Show a non-intrusive toast message
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg text-sm';
+        toast.innerHTML = `
+            <div class="flex items-center gap-3">
+                <i class="fa fa-map-marker text-yellow-400"></i>
+                <span>Location unavailable. <a href="/?feed=global" class="text-green-400 hover:underline">View Global feed</a></span>
+            </div>
+        `;
+        document.body.appendChild(toast);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => toast.remove(), 5000);
     }
 
     // Initialize when DOM is ready
