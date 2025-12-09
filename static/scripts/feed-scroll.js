@@ -481,7 +481,7 @@
                 fetchIPLocation();
             },
             {
-                enableHighAccuracy: false,  // OPTIMIZED: faster acquisition
+                enableHighAccuracy: true,
                 timeout: 5000,              // OPTIMIZED: reduced from 10s to 5s
                 maximumAge: 300000
             }
@@ -512,7 +512,7 @@
                 fetchIPLocation();
             },
             {
-                enableHighAccuracy: false,  // OPTIMIZED: faster acquisition
+                enableHighAccuracy: true, 
                 timeout: 5000,              // OPTIMIZED: reduced from 10s to 5s
                 maximumAge: 300000
             }
