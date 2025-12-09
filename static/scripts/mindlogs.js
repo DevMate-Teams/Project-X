@@ -60,6 +60,91 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   });
+
+  // Prevent duplicate log submissions
+  const logForm = document.getElementById('log-section');
+  if (logForm) {
+    let isSubmitting = false;
+    let submitBtn = null;
+    let originalText = '';
+
+    logForm.addEventListener('submit', function (e) {
+      // Prevent duplicate submissions
+      if (isSubmitting) {
+        e.preventDefault();
+        return false;
+      }
+
+      // Get the submit button
+      submitBtn = logForm.querySelector('button[type="submit"]');
+      
+      if (!submitBtn) {
+        return; // No submit button found, allow normal form submission
+      }
+
+      // Store original button text if not already stored
+      if (!originalText) {
+        originalText = submitBtn.innerHTML;
+      }
+
+      // Check if content field has value
+      const contentInput = logForm.querySelector('#log-input');
+      if (contentInput && !contentInput.value.trim()) {
+        // Empty content, don't submit
+        return;
+      }
+
+      // Check if form has HTML5 validation errors
+      if (!logForm.checkValidity()) {
+        // Let browser handle validation display
+        return;
+      }
+
+      // Mark as submitting
+      isSubmitting = true;
+
+      // Disable the button and show loading state
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
+
+      // Re-enable after timeout as fallback
+      // This handles cases where:
+      // 1. Server returns validation errors without redirect
+      // 2. Network failures prevent submission
+      // 3. Any other unexpected errors
+      setTimeout(function () {
+        if (isSubmitting && submitBtn) {
+          isSubmitting = false;
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
+      }, 10000); // 10 seconds to account for slow connections
+    });
+
+    // Handle page visibility change (user switches tabs during submission)
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible' && isSubmitting && submitBtn) {
+        // Check if we're still on the same page after 1 second
+        setTimeout(function () {
+          if (isSubmitting && submitBtn && document.getElementById('log-section')) {
+            // Still on same page, likely a validation error occurred
+            isSubmitting = false;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+          }
+        }, 1000);
+      }
+    });
+
+    // Handle beforeunload event to detect successful navigation
+    window.addEventListener('beforeunload', function () {
+      // If navigating away, the form likely submitted successfully
+      // Keep button disabled during navigation
+      if (isSubmitting) {
+        // Keep button disabled during navigation
+      }
+    });
+  }
 });
 
 
