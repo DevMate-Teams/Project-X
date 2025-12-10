@@ -632,9 +632,11 @@
         message.id = 'geo-enable-message';
         message.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-yellow-900 text-yellow-100 px-5 py-3 rounded-lg shadow-lg text-sm border border-yellow-700 w-full max-w-sm sm:max-w-md md:max-w-lg';
         message.innerHTML = `
-            <div class="flex items-center gap-3">
-                <i class="fa fa-location-arrow text-yellow-400"></i>
-                <span>Please enable location access to view your local feed.</span>
+            <div class="flex items-center justify-between gap-3 text-xs lg:text-sm">
+                <div class='flex items-center gap-3'>
+                    <i class="fa fa-location-arrow text-yellow-400"></i>
+                    <span>Enable location access and refresh to see your local feed.</span>
+                </div>
                 <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-yellow-400 hover:text-yellow-200">
                     <i class="fa fa-times"></i>
                 </button>
