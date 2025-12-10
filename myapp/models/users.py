@@ -25,16 +25,10 @@ class userinfo(models.Model):
     city = models.CharField(max_length=100, blank=True, null=True)
     state = models.CharField(max_length=100, blank=True, null=True)
     country = models.CharField(max_length=100, blank=True, null=True)
-    # Geo-coordinates for Local feed algorithm (auto-set by system)
-    # Browser location (primary, most accurate)
+    # Geo-coordinates for Local feed (browser geolocation only)
     browser_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
     browser_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
-    browser_location_updated_at = models.DateTimeField(null=True, blank=True, help_text="When browser GPS location was last updated")
-    
-    # IP location (fallback, city-level accuracy)
-    ip_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
-    ip_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
-    ip_location_updated_at = models.DateTimeField(null=True, blank=True, help_text="When IP-based location was last updated")
+    browser_location_updated_at = models.DateTimeField(null=True, blank=True, help_text="When browser location was last updated")
     
     # Browser permission tracking
     PERMISSION_CHOICES = [
@@ -44,7 +38,7 @@ class userinfo(models.Model):
     ]
     browser_permission_status = models.CharField(max_length=10, choices=PERMISSION_CHOICES, default='unknown', help_text="Browser geolocation permission status")
     
-    # Legacy fields for backward compatibility (computed properties)
+    # Legacy fields for backward compatibility
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
     website = models.URLField(blank=True, null=True)
@@ -69,12 +63,7 @@ class userinfo(models.Model):
     
     def get_best_location(self):
         """
-        Get the best available location coordinates following MVP priority:
-        1. Fresh browser location (< 48 hours)
-        2. Fresh IP location (< 12 hours)
-        3. Stale browser location
-        4. Stale IP location
-        5. None
+        Get user's location coordinates (browser-only, 24h freshness).
         
         Returns: tuple (latitude, longitude, source) or (None, None, None)
         """
@@ -83,25 +72,15 @@ class userinfo(models.Model):
         
         now = django_timezone.now()
         
-        # Priority 1: Fresh browser location (< 48 hours)
-        if self.browser_latitude and self.browser_longitude and self.browser_location_updated_at:
-            age = now - self.browser_location_updated_at
-            if age < timedelta(hours=48):
-                return (self.browser_latitude, self.browser_longitude, 'browser_fresh')
-        
-        # Priority 2: Fresh IP location (< 12 hours)
-        if self.ip_latitude and self.ip_longitude and self.ip_location_updated_at:
-            age = now - self.ip_location_updated_at
-            if age < timedelta(hours=12):
-                return (self.ip_latitude, self.ip_longitude, 'ip_fresh')
-        
-        # Priority 3: Stale browser location
+        # Only use browser location
         if self.browser_latitude and self.browser_longitude:
-            return (self.browser_latitude, self.browser_longitude, 'browser_stale')
-        
-        # Priority 4: Stale IP location
-        if self.ip_latitude and self.ip_longitude:
-            return (self.ip_latitude, self.ip_longitude, 'ip_stale')
+            if self.browser_location_updated_at:
+                age = now - self.browser_location_updated_at
+                if age < timedelta(hours=24):
+                    return (self.browser_latitude, self.browser_longitude, 'fresh')
+                else:
+                    return (self.browser_latitude, self.browser_longitude, 'stale')
+            return (self.browser_latitude, self.browser_longitude, 'stale')
         
         # No location available
         return (None, None, None)

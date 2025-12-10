@@ -328,40 +328,23 @@
     }
 
     // ==========================================================================
-    // MVP Geolocation System for Local Feed
+    // Browser-Only Geolocation System for Local Feed
     // ==========================================================================
     //
-    // PRIORITY ORDER (Never Change):
-    // 1. Fresh Browser Location (< 48 hours)
-    // 2. Fresh IP Location (< 12 hours)
-    // 3. Forced IP Refresh
-    // 4. Global Feed Fallback
+    // RULES:
+    // 1. ONLY browser geolocation is used (no IP fallback)
+    // 2. 24 hour freshness window
+    // 3. If denied: show message, no fallback
     //
-    // All IP API calls happen client-side (user's quota, not server's).
-    // OPTIMIZED: Dynamic feed refresh instead of page reload for faster UX.
     // ==========================================================================
 
     // LocalStorage key to prevent redundant location checks
     const GEO_JUST_UPDATED_KEY = 'geo_just_updated';
     const GEO_UPDATE_COOLDOWN_MS = 5000; // 5 seconds cooldown after update
 
-    // IP Geolocation API services (client-side, user's quota)
-    const IP_GEOLOCATION_APIS = [
-        {
-            name: 'ip-api.com',
-            url: 'http://ip-api.com/json/',
-            parse: (data) => data.status === 'success' ? { lat: data.lat, lon: data.lon } : null
-        },
-        {
-            name: 'ipwho.is',
-            url: 'https://ipwho.is/',
-            parse: (data) => data.success === true ? { lat: data.latitude, lon: data.longitude } : null
-        }
-    ];
-
     /**
      * Initialize geolocation for Local feed.
-     * Only runs on Local tab, implements MVP algorithm.
+     * Only runs on Local tab.
      */
     function initGeolocation() {
         // Only run on Local feed
@@ -369,20 +352,19 @@
             return;
         }
 
-        // CRITICAL: Prevent redundant checks after location update
+        // Prevent redundant checks after location update
         const justUpdated = localStorage.getItem(GEO_JUST_UPDATED_KEY);
         if (justUpdated) {
             const timeSinceUpdate = Date.now() - parseInt(justUpdated);
             if (timeSinceUpdate < GEO_UPDATE_COOLDOWN_MS) {
-                console.log('[Geo MVP] Just updated location, skipping check to prevent loop');
+                console.log('[Geo] Just updated location, skipping check');
                 localStorage.removeItem(GEO_JUST_UPDATED_KEY);
                 return;
             }
-            // Expired, remove it
             localStorage.removeItem(GEO_JUST_UPDATED_KEY);
         }
 
-        console.log('[Geo MVP] Initializing geolocation for Local feed...');
+        console.log('[Geo] Initializing geolocation for Local feed...');
 
         // Fetch server status
         fetch('/api/geolocation/status/', {
@@ -392,142 +374,98 @@
         })
             .then(response => response.ok ? response.json() : Promise.reject('Status fetch failed'))
             .then(status => {
-                console.log('[Geo MVP] Status:', status);
-                executeMVPAlgorithm(status);
+                console.log('[Geo] Status:', status);
+                executeGeolocation(status);
             })
             .catch(error => {
-                console.error('[Geo MVP] Status check failed:', error);
-                // Graceful degradation: Local feed still works without location
+                console.error('[Geo] Status check failed:', error);
             });
     }
 
     /**
-     * Execute MVP algorithm based on server status.
-     * Follows LOCATION_COORDINATES.MD spec exactly.
+     * Execute geolocation based on server status.
      */
-    function executeMVPAlgorithm(status) {
+    function executeGeolocation(status) {
         const action = status.recommended_action;
 
-        console.log('[Geo MVP] Recommended action:', action);
+        console.log('[Geo] Recommended action:', action);
 
         switch (action) {
-            case 'use_browser_location':
-                // Browser location is fresh (< 48h), use it
-                console.log('[Geo MVP] Using fresh browser location');
+            case 'use_location':
+                // Location is fresh (< 24h), use it
+                console.log('[Geo] Using fresh location');
                 break;
 
-            case 'refresh_browser_location':
-                // Browser location is stale but permission was granted, try silent refresh
-                console.log('[Geo MVP] Refreshing stale browser location');
-                attemptBrowserRefresh();
+            case 'request_location':
+                // No location or stale - request from browser
+                console.log('[Geo] Requesting browser location');
+                requestBrowserLocation(false);
                 break;
 
-            case 'request_browser_permission':
-                // First-time user, no location at all
-                console.log('[Geo MVP] First-time user, requesting browser permission');
-                requestBrowserPermission();
-                break;
-
-            case 'use_ip_location':
-                // IP location is fresh (< 12h), use it
-                console.log('[Geo MVP] Using fresh IP location');
-                break;
-
-            case 'refresh_ip_location':
-                // IP location is stale or missing, refresh it (client-side)
-                console.log('[Geo MVP] Refreshing IP location (client-side)');
-                fetchIPLocation();
-                break;
-
-            case 'show_global_feed':
-                // Both sources failed, redirect to Global
-                console.log('[Geo MVP] No location available, suggesting Global feed');
-                showGlobalFeedMessage();
+            case 'retry_request_location':
+                // Previously denied - try again silently (user may have changed browser permission)
+                console.log('[Geo] Retrying browser location (previously denied)');
+                requestBrowserLocation(true);
                 break;
 
             default:
-                console.warn('[Geo MVP] Unknown action:', action);
+                console.warn('[Geo] Unknown action:', action);
         }
     }
 
     /**
-     * Request browser geolocation permission (first-time user).
-     * OPTIMIZED: Reduced timeout from 10s to 5s for faster fallback.
+     * Request browser geolocation.
+     * @param {boolean} isRetry - If true, this is a retry after previous denial (silent attempt)
      */
-    function requestBrowserPermission() {
+    function requestBrowserLocation(isRetry = false) {
         if (!navigator.geolocation) {
-            console.log('[Geo MVP] Browser API unavailable, falling back to IP');
-            fetchIPLocation();
+            console.log('[Geo] Browser geolocation not available');
+            showEnableLocationMessage();
             return;
         }
 
+        // Only show loading indicator for fresh requests, not retries
+        if (!isRetry) {
+            showLocationLoadingIndicator();
+        }
+
         navigator.geolocation.getCurrentPosition(
-            // SUCCESS
+            // SUCCESS - User granted permission (or changed from denied to allow)
             (position) => {
                 const { latitude, longitude } = position.coords;
-                console.log('[Geo MVP] Browser permission granted:', latitude.toFixed(4), longitude.toFixed(4));
-                saveBrowserLocation(latitude, longitude);
+                console.log('[Geo] Got location:', latitude.toFixed(4), longitude.toFixed(4));
+                // This will also update permission status to 'allowed'
+                saveLocation(latitude, longitude);
             },
             // ERROR
             (error) => {
-                console.log('[Geo MVP] Browser permission denied/failed:', error.message);
+                console.log('[Geo] Failed to get location:', error.message);
+                hideLocationLoadingIndicator();
 
-                // Record denial on server (non-blocking)
                 if (error.code === error.PERMISSION_DENIED) {
-                    recordPermissionDenied();
+                    // Only record denial if not already a retry (avoid redundant updates)
+                    if (!isRetry) {
+                        recordPermissionDenied();
+                    }
+                    showEnableLocationMessage();
+                } else {
+                    // Other error (timeout, unavailable)
+                    showEnableLocationMessage();
                 }
-
-                // Fallback to IP
-                fetchIPLocation();
             },
             {
                 enableHighAccuracy: true,
-                timeout: 5000,              // OPTIMIZED: reduced from 10s to 5s
-                maximumAge: 300000
+                timeout: 10000,
+                maximumAge: 0  // Always get fresh position
             }
         );
     }
 
     /**
-     * Attempt silent browser location refresh (permission already granted).
-     * OPTIMIZED: Reduced timeout for faster fallback.
+     * Save location to server.
      */
-    function attemptBrowserRefresh() {
-        if (!navigator.geolocation) {
-            console.log('[Geo MVP] Browser API unavailable during refresh');
-            fetchIPLocation();
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            // SUCCESS
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                console.log('[Geo MVP] Browser refresh successful');
-                saveBrowserLocation(latitude, longitude);
-            },
-            // ERROR
-            (error) => {
-                console.log('[Geo MVP] Browser refresh failed:', error.message);
-                fetchIPLocation();
-            },
-            {
-                enableHighAccuracy: true, 
-                timeout: 5000,              // OPTIMIZED: reduced from 10s to 5s
-                maximumAge: 300000
-            }
-        );
-    }
-
-    /**
-     * Save browser GPS coordinates to server.
-     * OPTIMIZED: Dynamic feed refresh instead of full page reload.
-     */
-    function saveBrowserLocation(latitude, longitude) {
-        // Show loading indicator immediately
-        showLocationLoadingIndicator();
-
-        fetch('/api/geolocation/browser/update/', {
+    function saveLocation(latitude, longitude) {
+        fetch('/api/geolocation/update/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -537,99 +475,22 @@
             credentials: 'same-origin',
             body: JSON.stringify({ latitude, longitude })
         })
-            .then(response => response.ok ? response.json() : Promise.reject('Browser update failed'))
+            .then(response => response.ok ? response.json() : Promise.reject('Update failed'))
             .then(data => {
                 if (data.success) {
-                    console.log('[Geo MVP] Browser location saved, refreshing feed...');
+                    console.log('[Geo] Location saved, refreshing feed...');
                     localStorage.setItem(GEO_JUST_UPDATED_KEY, Date.now().toString());
-                    // OPTIMIZED: Dynamic feed refresh instead of page reload
                     refreshLocalFeed();
                 }
             })
             .catch(error => {
-                console.error('[Geo MVP] Failed to save browser location:', error);
+                console.error('[Geo] Failed to save location:', error);
                 hideLocationLoadingIndicator();
-                fetchIPLocation();  // Fallback to IP
             });
     }
 
     /**
-     * Fetch IP-based location from client-side API (user's quota).
-     * OPTIMIZED: Try APIs in parallel with Promise.race for faster response.
-     */
-    function fetchIPLocation() {
-        console.log('[Geo MVP] Fetching IP location from client-side APIs...');
-        showLocationLoadingIndicator();
-
-        // OPTIMIZED: Try all APIs in parallel, use first successful response
-        const apiPromises = IP_GEOLOCATION_APIS.map((api, index) => {
-            return fetch(api.url, {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' }
-            })
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    return response.json();
-                })
-                .then(data => {
-                    const coords = api.parse(data);
-                    if (coords && coords.lat && coords.lon) {
-                        console.log(`[Geo MVP] ${api.name} success:`, coords.lat, coords.lon);
-                        return coords;
-                    }
-                    throw new Error('Invalid data');
-                })
-                .catch(error => {
-                    console.log(`[Geo MVP] ${api.name} failed:`, error.message);
-                    throw error;  // Propagate to allow Promise.any to try others
-                });
-        });
-
-        // Use Promise.any to get first successful result (or all fail)
-        Promise.any(apiPromises)
-            .then(coords => {
-                saveIPLocation(coords.lat, coords.lon);
-            })
-            .catch(error => {
-                console.warn('[Geo MVP] All IP APIs failed');
-                hideLocationLoadingIndicator();
-                showGlobalFeedMessage();
-            });
-    }
-
-    /**
-     * Save IP-based coordinates to server.
-     * OPTIMIZED: Dynamic feed refresh instead of full page reload.
-     */
-    function saveIPLocation(latitude, longitude) {
-        fetch('/api/geolocation/ip/update/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken(),
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({ latitude, longitude })
-        })
-            .then(response => response.ok ? response.json() : Promise.reject('IP update failed'))
-            .then(data => {
-                if (data.success) {
-                    console.log('[Geo MVP] IP location saved, refreshing feed...');
-                    localStorage.setItem(GEO_JUST_UPDATED_KEY, Date.now().toString());
-                    // OPTIMIZED: Dynamic feed refresh instead of page reload
-                    refreshLocalFeed();
-                }
-            })
-            .catch(error => {
-                console.error('[Geo MVP] Failed to save IP location:', error);
-                hideLocationLoadingIndicator();
-                showGlobalFeedMessage();
-            });
-    }
-
-    /**
-     * Record that user denied browser permission.
+     * Record permission denial on server.
      */
     function recordPermissionDenied() {
         fetch('/api/geolocation/permission/denied/', {
@@ -640,25 +501,22 @@
             },
             credentials: 'same-origin'
         })
-            .then(() => console.log('[Geo MVP] Permission denial recorded'))
-            .catch(error => console.error('[Geo MVP] Failed to record denial:', error));
+            .then(() => console.log('[Geo] Permission denial recorded'))
+            .catch(error => console.error('[Geo] Failed to record denial:', error));
     }
 
     /**
-     * Dynamically refresh the Local feed content via AJAX.
-     * OPTIMIZED: No page reload - just fetch and replace feed content.
+     * Refresh Local feed content via AJAX.
      */
     function refreshLocalFeed() {
         const feedContainer = document.getElementById('feed-container');
         if (!feedContainer) {
-            // No feed container, fall back to reload
             window.location.reload();
             return;
         }
 
-        console.log('[Geo MVP] Refreshing feed via AJAX...');
+        console.log('[Geo] Refreshing feed...');
 
-        // Fetch fresh feed content
         fetch('/?feed=local', {
             method: 'GET',
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -666,40 +524,35 @@
         })
             .then(response => response.text())
             .then(html => {
-                // Parse the response and extract feed items
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
                 const newFeedContainer = doc.getElementById('feed-container');
 
                 if (newFeedContainer) {
-                    // Replace feed content
                     feedContainer.innerHTML = newFeedContainer.innerHTML;
                     feedContainer.dataset.nextCursor = newFeedContainer.dataset.nextCursor || '';
                     feedContainer.dataset.hasNext = newFeedContainer.dataset.hasNext || 'False';
-
-                    // Re-initialize infinite scroll and view tracking
                     initViewTracking();
 
-                    // Re-apply syntax highlighting
                     if (typeof hljs !== 'undefined') {
                         feedContainer.querySelectorAll('pre code:not(.hljs)').forEach((block) => {
                             hljs.highlightElement(block);
                         });
                     }
 
-                    console.log('[Geo MVP] Feed refreshed successfully');
+                    console.log('[Geo] Feed refreshed');
                 }
 
                 hideLocationLoadingIndicator();
             })
             .catch(error => {
-                console.error('[Geo MVP] Feed refresh failed, falling back to reload:', error);
+                console.error('[Geo] Feed refresh failed:', error);
                 window.location.reload();
             });
     }
 
     /**
-     * Show loading indicator while fetching location.
+     * Show loading indicator.
      */
     function showLocationLoadingIndicator() {
         let indicator = document.getElementById('geo-loading-indicator');
@@ -717,7 +570,7 @@
     }
 
     /**
-     * Hide location loading indicator.
+     * Hide loading indicator.
      */
     function hideLocationLoadingIndicator() {
         const indicator = document.getElementById('geo-loading-indicator');
@@ -727,25 +580,30 @@
     }
 
     /**
-     * Show message suggesting Global feed when location fails.
+     * Show message when location is not enabled.
      */
-    function showGlobalFeedMessage() {
-        console.log('[Geo MVP] Showing Global feed suggestion');
+    function showEnableLocationMessage() {
+        console.log('[Geo] Showing enable location message');
         hideLocationLoadingIndicator();
 
-        // Show a non-intrusive toast message
-        const toast = document.createElement('div');
-        toast.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg text-sm';
-        toast.innerHTML = `
+        // Remove any existing message
+        const existing = document.getElementById('geo-enable-message');
+        if (existing) existing.remove();
+
+        // Show persistent message
+        const message = document.createElement('div');
+        message.id = 'geo-enable-message';
+        message.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-yellow-900 text-yellow-100 px-5 py-3 rounded-lg shadow-lg text-sm border border-yellow-700 w-full max-w-sm sm:max-w-md md:max-w-lg';
+        message.innerHTML = `
             <div class="flex items-center gap-3">
-                <i class="fa fa-map-marker text-yellow-400"></i>
-                <span>Location unavailable. <a href="/?feed=global" class="text-green-400 hover:underline">View Global feed</a></span>
+                <i class="fa fa-location-arrow text-yellow-400"></i>
+                <span>Please enable location access to view your local feed.</span>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-yellow-400 hover:text-yellow-200">
+                    <i class="fa fa-times"></i>
+                </button>
             </div>
         `;
-        document.body.appendChild(toast);
-
-        // Auto-remove after 5 seconds
-        setTimeout(() => toast.remove(), 5000);
+        document.body.appendChild(message);
     }
 
     // Initialize when DOM is ready
