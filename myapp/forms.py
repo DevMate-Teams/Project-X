@@ -115,7 +115,7 @@ class EditProfileForm(forms.ModelForm):
     
     class Meta:
         model = userinfo
-        exclude = ['user', 'years_of_experience', 'skills', 'profile_views', 'updated_at', 'needs_profile_completion', 'last_seen', 'timezone', 'coding_style', 'latitude', 'longitude']
+        exclude = ['user', 'years_of_experience', 'skills', 'updated_at', 'needs_profile_completion', 'last_seen', 'timezone', 'coding_style', 'latitude', 'longitude', 'browser_permission_status']
         
         widgets = {
             'bio': forms.Textarea(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Bio...', 'rows': 7,'cols': 40,}),

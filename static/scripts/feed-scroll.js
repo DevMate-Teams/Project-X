@@ -416,8 +416,12 @@
     /**
      * Request browser geolocation.
      * @param {boolean} isRetry - If true, this is a retry after previous denial (silent attempt)
+     * @param {number} attempt - Current attempt number for timeout retry
      */
-    function requestBrowserLocation(isRetry = false) {
+    function requestBrowserLocation(isRetry = false, attempt = 1) {
+        const MAX_ATTEMPTS = 2;
+        const TIMEOUT_MS = 30000; // 30 seconds for GPS lock
+
         if (!navigator.geolocation) {
             console.log('[Geo] Browser geolocation not available');
             showEnableLocationMessage();
@@ -425,40 +429,73 @@
         }
 
         // Only show loading indicator for fresh requests, not retries
-        if (!isRetry) {
+        if (!isRetry && attempt === 1) {
             showLocationLoadingIndicator();
         }
 
         navigator.geolocation.getCurrentPosition(
-            // SUCCESS - User granted permission (or changed from denied to allow)
+            // SUCCESS - User granted permission
             (position) => {
                 const { latitude, longitude } = position.coords;
                 console.log('[Geo] Got location:', latitude.toFixed(4), longitude.toFixed(4));
-                // This will also update permission status to 'allowed'
                 saveLocation(latitude, longitude);
             },
             // ERROR
             (error) => {
-                console.log('[Geo] Failed to get location:', error.message);
-                hideLocationLoadingIndicator();
+                console.log('[Geo] Failed to get location:', error.message, '(code:', error.code + ')');
 
+                // Error codes: 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT
                 if (error.code === error.PERMISSION_DENIED) {
-                    // Only record denial if not already a retry (avoid redundant updates)
+                    hideLocationLoadingIndicator();
                     if (!isRetry) {
                         recordPermissionDenied();
                     }
                     showEnableLocationMessage();
+                } else if (error.code === error.TIMEOUT || error.code === error.POSITION_UNAVAILABLE) {
+                    // Timeout or unavailable - retry once more
+                    if (attempt < MAX_ATTEMPTS) {
+                        console.log('[Geo] Retrying... (attempt', attempt + 1, 'of', MAX_ATTEMPTS + ')');
+                        requestBrowserLocation(isRetry, attempt + 1);
+                    } else {
+                        // Max retries reached - show timeout message
+                        hideLocationLoadingIndicator();
+                        showTimeoutMessage();
+                    }
                 } else {
-                    // Other error (timeout, unavailable)
-                    showEnableLocationMessage();
+                    hideLocationLoadingIndicator();
+                    showTimeoutMessage();
                 }
             },
             {
                 enableHighAccuracy: true,
-                timeout: 10000,
+                timeout: TIMEOUT_MS,
                 maximumAge: 0  // Always get fresh position
             }
         );
+    }
+
+    /**
+     * Show message when location times out (different from permission denied).
+     */
+    function showTimeoutMessage() {
+        console.log('[Geo] Showing timeout message');
+
+        const existing = document.getElementById('geo-timeout-message');
+        if (existing) existing.remove();
+
+        const message = document.createElement('div');
+        message.id = 'geo-timeout-message';
+        message.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-orange-900 text-orange-100 px-5 py-3 rounded-lg shadow-lg text-sm border border-orange-700 w-full max-w-sm sm:max-w-md md:max-w-lg';
+        message.innerHTML = `
+            <div class="flex items-center gap-3">
+                <i class="fa fa-clock text-orange-400"></i>
+                <span>Location request timed out. Please try again or check your GPS settings.</span>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-orange-400 hover:text-orange-200">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+        `;
+        document.body.appendChild(message);
     }
 
     /**
