@@ -159,7 +159,7 @@ def home_page(request):
     nearby_developers = []
     if feed_type == 'local':
         from .utils.nearby_developers import get_nearby_developers
-        nearby_developers = get_nearby_developers(request.user, limit=7)
+        nearby_developers = get_nearby_developers(request.user, limit=10)
     
     context = {
         'logform': logform,

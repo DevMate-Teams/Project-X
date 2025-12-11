@@ -17,7 +17,7 @@ MAX_DISTANCE_KM = 500  # Maximum distance to consider (km)
 CACHE_TTL_SECONDS = 600  # Cache results for 10 minutes
 
 
-def get_nearby_developers(user, limit=5, exclude_following=False):
+def get_nearby_developers(user, limit=10, exclude_following=False):
     """
     Get geographically closest developers to a user.
     

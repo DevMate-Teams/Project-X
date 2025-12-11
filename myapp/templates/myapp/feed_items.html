@@ -41,7 +41,7 @@
     <!-- User Header -->
     <div class="flex items-center gap-3 p-4 bg-[#151b23] border-b border-[#282e35]">
         <a href="{% url 'user_profile' log.user.user.username %}">
-            <img src="{{ log.user.profile_image.url|default:'/static/assets/default-avatar.png' }}" 
+            <img src="{{ log.user.profile_image.url|default:'/static/assets/default-avatar.png' }}?v={{log.user.updated_at.timestamp}}" 
                  alt="{{ log.user.user.username }}"
                  class="w-10 h-10 rounded-full object-cover ring-2 ring-[#30363d] hover:ring-green-500 transition-all">
         </a>
@@ -211,7 +211,7 @@
 </div>
 
 <!-- Nearby Developers (Mobile/Tablet Only - Local Tab) - After first batch of logs -->
-{% if forloop.counter == 7 and feed_type == 'local' and nearby_developers %}
+{% if forloop.counter == 2 and feed_type == 'local' and nearby_developers %}
 <div class="block min-[1110px]:hidden">
     {% include 'includes/nearby_developers.html' %}
 </div>
