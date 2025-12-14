@@ -240,7 +240,7 @@ ACCOUNT_FORMS = {
     'signup': 'myapp.forms.CustomSignupForm',
 }
 
-if not DEBUG:
+if not DEBUG and config('REQUIRE_HTTPS', cast=bool):
     ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" # Force HTTPS in OAuth redirect URIs
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True

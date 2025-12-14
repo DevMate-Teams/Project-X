@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import skill, userinfo, education, experience, follow, user_status, CodingStyle
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-from logs.models import Log, Reaction, Comment, LogViews
+from logs.models import Log, Reaction, Comment, LogViews, LogFormSettings, Notification
 
 # Register your models here.
 admin.site.register(skill)
@@ -14,6 +14,19 @@ admin.site.register(user_status)
 admin.site.register(Reaction)
 admin.site.register(CodingStyle)
 admin.site.register(LogViews)
+admin.site.register(Notification)
+
+@admin.register(LogFormSettings)
+class LogFormSettingsAdmin(admin.ModelAdmin):
+    list_display = ['placeholder_text']
+    
+    def has_add_permission(self, request):
+        # Only allow one instance
+        return not LogFormSettings.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        # Don't allow deletion
+        return False
 
 @admin.register(userinfo)
 class userinfoAdmin(admin.ModelAdmin):

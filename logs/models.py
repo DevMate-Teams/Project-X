@@ -206,3 +206,34 @@ class LogViews(models.Model):
         self.view_count = F('view_count') + 1
         self.viewed_at = timezone.now()
         self.save(update_fields=['view_count', 'viewed_at'])
+
+
+class LogFormSettings(models.Model):
+    """
+    Singleton model to store LogForm settings like placeholder text.
+    Only one instance should exist.
+    """
+    placeholder_text = models.CharField(
+        max_length=200,
+        default="What are you working on?",
+        help_text="Placeholder text shown in the log content field"
+    )
+    
+    class Meta:
+        verbose_name = "Log Form Settings"
+        verbose_name_plural = "Log Form Settings"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one instance exists
+        if not self.pk and LogFormSettings.objects.exists():
+            self.pk = LogFormSettings.objects.first().pk
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_settings(cls):
+        """Get or create the settings instance"""
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+    
+    def __str__(self):
+        return "Log Form Settings"

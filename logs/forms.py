@@ -1,14 +1,19 @@
 from django import forms
-from .models import Log, Comment
+from .models import Log, Comment, LogFormSettings
 
 class LogForm(forms.ModelForm):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Get placeholder from settings
+        settings = LogFormSettings.get_settings()
+        self.fields['content'].widget.attrs['placeholder'] = settings.placeholder_text
     
     class Meta:
         model = Log
         fields = ['content', 'snap_shot']
         widgets = {
             'content': forms.TextInput(attrs={
-                'placeholder': "What are you working on?",
                 'id': "log-input",
                 'class': "flex-1 h-12 sm:h-14 bg-transparent focus:outline-none text-white placeholder-gray-500 font-mono text-sm",
                 'autocomplete': "off",
