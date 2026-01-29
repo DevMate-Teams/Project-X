@@ -10,6 +10,8 @@
 [![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![jQuery](https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white)](https://jquery.com/)
+[![AJAX](https://img.shields.io/badge/AJAX-5A29E4?style=for-the-badge&logo=ajax&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/Guide/AJAX)
 
 [🌐 Live Site](https://devmate.space) • [📧 Contact](mailto:devmate.teams@gmail.com)
 
@@ -162,9 +164,13 @@ Initially launched exclusively for CIT Chennai students, DevMate creates a space
 
 4. **Set up environment variables**
    
-   Create a `.env` file in the DevMate directory:
+   Create a `.env` file in the DevMate directory with the following configuration:
+   
+   <details open>
+   <summary><strong>📋 Environment Variables (Click to expand)</strong></summary>
+   
    ```env
-   # Django Settings
+   # ===== Django Core =====
    SECRET_KEY=your-secret-key-here
    IS_DEVELOPMENT=True
    DEBUG=True
@@ -172,44 +178,43 @@ Initially launched exclusively for CIT Chennai students, DevMate creates a space
    CSRF_TRUSTED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000
    SITE_ID=1
    
-   # Database (Development - SQLite is default)
-   # For PostgreSQL:
+   # ===== Database =====
+   # Development (SQLite default - no config needed)
+   # PostgreSQL Development:
    DB_NAME=devmate_db
    DB_USER=your_db_user
    DB_PASSWORD=your_db_password
-- **Email:** [devmate.teams@gmail.com](mailto:devmate.teams@gmail.com)
-- **Website:** [devmate.space](https://devmate.space)
-- **Feedback:** [Submit Feedback](https://devmate.space/feedback/)
-
    DB_HOST=localhost
    DB_PORT=5432
    
-   # Production Database
-   # DB_DATABASE_URL=postgres://user:password@host:port/database
+   # Production:
+   DB_DATABASE_URL=postgres://user:password@host:port/database
    
-   # OAuth Keys
-   # Google OAuth (get from Google Cloud Console)
-   # GOOGLE_CLIENT_ID=your-google-client-id
-   # GOOGLE_CLIENT_SECRET=your-google-client-secret
+   # ===== OAuth =====
+   # Google (https://console.cloud.google.com/)
+   GOOGLE_CLIENT_ID=your-google-client-id
+   GOOGLE_CLIENT_SECRET=your-google-client-secret
    
-   # GitHub OAuth (get from GitHub Developer Settings)
-   # GITHUB_CLIENT_ID=your-github-client-id
-   # GITHUB_CLIENT_SECRET=your-github-client-secret
+   # GitHub (https://github.com/settings/developers)
+   GITHUB_CLIENT_ID=your-github-client-id
+   GITHUB_CLIENT_SECRET=your-github-client-secret
    
-   # Email (Production)
-   # BREVO_API_KEY=your-brevo-api-key
+   # ===== Email =====
+   BREVO_API_KEY=your-brevo-api-key
    
-   # Cloudflare R2 Storage (Optional)
+   # ===== Storage (Optional) =====
    USE_CLOUDFLARE=False
-   # CLOUDFLARE_R2_BUCKET=devmate
-   # CLOUDFLARE_R2_ACCESS_KEY=your-access-key
-   # CLOUDFLARE_R2_BUCKET_ENDPOINT=your-endpoint-url
-   # CLOUDFLARE_R2_SECRET_KEY=your-secret-key
-   # CLOUDFLARE_R2_PUBLIC_URL=your-public-url
+   CLOUDFLARE_R2_BUCKET=devmate
+   CLOUDFLARE_R2_ACCESS_KEY=your-access-key
+   CLOUDFLARE_R2_BUCKET_ENDPOINT=your-endpoint-url
+   CLOUDFLARE_R2_SECRET_KEY=your-secret-key
+   CLOUDFLARE_R2_PUBLIC_URL=your-public-url
    
-   # Security (Production)
+   # ===== Security =====
    REQUIRE_HTTPS=False
    ```
+   
+   </details>
 
 5. **Run migrations**
    ```bash
